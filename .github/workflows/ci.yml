@@ -1,0 +1,30 @@
+# CI 主体骨架：编译全仓库。镜像构建与 K8s 发布可在后续迭代中接 registry / 环境矩阵。
+name: CI
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - name: Build with Maven
+        run: mvn -B -ntp package -DskipTests
+
+      # TODO: 按需增加
+      # - 各模块 docker build（在子模块目录、或根目录多阶段 Dockerfile）
+      # - 推送镜像到 Harbor / GHCR
+      # - 触发 Argo CD / kubectl 部署（使用 deploy/kubernetes 下清单）

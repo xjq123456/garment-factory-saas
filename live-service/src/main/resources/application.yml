@@ -1,0 +1,10 @@
+server:
+  port: 8550
+
+spring:
+  application:
+    name: live-service
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER:127.0.0.1:8848}

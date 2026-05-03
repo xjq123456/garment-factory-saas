@@ -1,0 +1,7 @@
+# TODO: 按实际环境修改 metadata.name（如 garment-dev / garment-prod）
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: garment-saas
+  labels:
+    app.kubernetes.io/part-of: garment-factory-saas

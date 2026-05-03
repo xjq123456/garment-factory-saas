@@ -1,0 +1,47 @@
+# 单服务部署示例骨架：复制为 services/<模块名>.yaml 后替换占位符。
+# 镜像名、环境变量、探针、资源配额等请在项目成熟后补全。
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: example-service
+  namespace: garment-saas
+  labels:
+    app.kubernetes.io/name: example-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: example-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: example-service
+    spec:
+      containers:
+        - name: app
+          # TODO: 替换为镜像仓库地址与 tag
+          image: your-registry/garment/example-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          env: []
+          # TODO: livenessProbe / readinessProbe
+          # TODO: resources.requests / limits
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: example-service
+  namespace: garment-saas
+  labels:
+    app.kubernetes.io/name: example-service
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: example-service
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http

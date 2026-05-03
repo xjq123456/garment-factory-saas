@@ -1,0 +1,10 @@
+# 可选：后续使用 kustomize build deploy/kubernetes | kubectl apply -f -
+# 当前仅聚合示例资源，按需取消注释并拆分到 overlays/
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: garment-saas
+
+resources:
+  - base/namespace.yaml
+  # - example/deployment-and-service.yaml  # 示例，确认镜像与端口后再纳入

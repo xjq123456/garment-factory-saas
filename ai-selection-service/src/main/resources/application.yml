@@ -1,0 +1,10 @@
+server:
+  port: 8900
+
+spring:
+  application:
+    name: ai-selection-service
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER:127.0.0.1:8848}
