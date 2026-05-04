@@ -8,3 +8,38 @@ spring:
     nacos:
       discovery:
         server-addr: ${NACOS_SERVER:127.0.0.1:8848}
+  elasticsearch:
+    uris: ${ELASTICSEARCH_URIS:http://127.0.0.1:9200}
+  kafka:
+    bootstrap-servers: ${KAFKA_SERVERS:127.0.0.1:9092}
+    consumer:
+      group-id: search-service-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      enable-auto-commit: false
+    listener:
+      ack-mode: manual
+
+# Jackson 序列化配置
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+
+# 管理端点
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+# 索引前缀
+search:
+  index:
+    prefix: garment_

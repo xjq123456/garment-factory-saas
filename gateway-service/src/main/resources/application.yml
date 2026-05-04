@@ -2,110 +2,154 @@ server:
   port: 8080
 
 spring:
-  codec:
-    max-in-memory-size: 10MB
+  application:
+    name: gateway-service
   cloud:
-    gateway:
+    nacos:
       discovery:
-        locator:
-          enabled: true
+        server-addr: ${NACOS_ADDR:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:}
+    gateway:
       routes:
         - id: user-service
           uri: lb://user-service
           predicates:
-            - Path=/user/**
+            - Path=/api/user/**
+          filters:
+            - StripPrefix=2
+
         - id: rbac-service
           uri: lb://rbac-service
           predicates:
-            - Path=/rbac/**
-        - id: order-service
-          uri: lb://order-service
-          predicates:
-            - Path=/order/**
-        - id: inventory-service
-          uri: lb://inventory-service
-          predicates:
-            - Path=/inventory/**
-        - id: production-service
-          uri: lb://production-service
-          predicates:
-            - Path=/production/**
-        - id: payment-service
-          uri: lb://payment-service
-          predicates:
-            - Path=/payment/**
-        - id: print-service
-          uri: lb://print-service
-          predicates:
-            - Path=/print/**
-        - id: marketing-service
-          uri: lb://marketing-service
-          predicates:
-            - Path=/marketing/**
-        - id: ecommerce-adapter
-          uri: lb://ecommerce-adapter
-          predicates:
-            - Path=/ecommerce/**
-        - id: live-service
-          uri: lb://live-service
-          predicates:
-            - Path=/live/**
+            - Path=/api/rbac/**
+          filters:
+            - StripPrefix=2
+
         - id: style-service
           uri: lb://style-service
           predicates:
-            - Path=/style/**
+            - Path=/api/style/**
+          filters:
+            - StripPrefix=2
+
+        - id: order-service
+          uri: lb://order-service
+          predicates:
+            - Path=/api/order/**
+          filters:
+            - StripPrefix=2
+
+        - id: production-service
+          uri: lb://production-service
+          predicates:
+            - Path=/api/production/**
+          filters:
+            - StripPrefix=2
+
+        - id: inventory-service
+          uri: lb://inventory-service
+          predicates:
+            - Path=/api/inventory/**
+          filters:
+            - StripPrefix=2
+
+        - id: payment-service
+          uri: lb://payment-service
+          predicates:
+            - Path=/api/payment/**
+          filters:
+            - StripPrefix=2
+
         - id: device-service
           uri: lb://device-service
           predicates:
-            - Path=/device/**
+            - Path=/api/device/**
+          filters:
+            - StripPrefix=2
+
+        - id: live-service
+          uri: lb://live-service
+          predicates:
+            - Path=/api/live/**
+          filters:
+            - StripPrefix=2
+
         - id: report-service
           uri: lb://report-service
           predicates:
-            - Path=/report/**
-        - id: ai-advisor-service
-          uri: lb://ai-advisor-service
+            - Path=/api/report/**
+          filters:
+            - StripPrefix=2
+
+        - id: print-service
+          uri: lb://print-service
           predicates:
-            - Path=/ai-advisor/**
-        - id: ai-selection-service
-          uri: lb://ai-selection-service
+            - Path=/api/print/**
+          filters:
+            - StripPrefix=2
+
+        - id: marketing-service
+          uri: lb://marketing-service
           predicates:
-            - Path=/ai-selection/**
+            - Path=/api/marketing/**
+          filters:
+            - StripPrefix=2
+
+        - id: ecommerce-adapter
+          uri: lb://ecommerce-adapter
+          predicates:
+            - Path=/api/ecommerce/**
+          filters:
+            - StripPrefix=2
+
         - id: search-service
           uri: lb://search-service
           predicates:
-            - Path=/search/**
+            - Path=/api/search/**
+          filters:
+            - StripPrefix=2
 
+        - id: ai-advisor-service
+          uri: lb://ai-advisor-service
+          predicates:
+            - Path=/api/ai/advisor/**
+          filters:
+            - StripPrefix=2
+
+        - id: ai-selection-service
+          uri: lb://ai-selection-service
+          predicates:
+            - Path=/api/ai/selection/**
+          filters:
+            - StripPrefix=2
+
+# ==================== 网关配置 ====================
 gateway:
-  audit:
+  jwt:
     enabled: true
-  cache-request-body:
-    enabled: false
+    secret: ${JWT_SECRET:garment-factory-default-secret-key-must-be-32bytes!}
+    whitelist:
+      - /api/user/auth/login
+      - /api/user/auth/register
+      - /api/user/auth/captcha
+      - /actuator/**
   cors:
-    enabled: false
-    allowed-origins: []
-
-knife4j:
-  gateway:
     enabled: true
-    strategy: discover
-    discover:
-      enabled: true
-      version: openapi3
-      excluded-services:
-        - gateway-service
-      oas3:
-        url: /v3/api-docs?group=default
+    allowed-origins:
+      - "*"
+    allowed-methods:
+      - GET
+      - POST
+      - PUT
+      - PATCH
+      - DELETE
+      - OPTIONS
+    allowed-headers:
+      - "*"
+    allow-credentials: false
 
-management:
-  endpoints:
-    web:
-      exposure:
-        include: '*'
-  prometheus:
-    metrics:
-      export:
-        enabled: true
-
+# ==================== 日志 ====================
 logging:
   level:
-    root: INFO
+    com.garmentfactory.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG

@@ -4,7 +4,41 @@ server:
 spring:
   application:
     name: rbac-service
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:127.0.0.1}:${MYSQL_PORT:3306}/garment_rbac?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: ${MYSQL_USER:root}
+    password: ${MYSQL_PASSWORD:root}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
   cloud:
     nacos:
       discovery:
         server-addr: ${NACOS_SERVER:127.0.0.1:8848}
+      config:
+        server-addr: ${NACOS_SERVER:127.0.0.1:8848}
+        file-extension: yml
+
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+      id-type: assign_id
+
+garment:
+  jwt:
+    secret: ${JWT_SECRET:garment-factory-saas-jwt-secret-key-2024-min32chars}
+    expiration: ${JWT_EXPIRATION:86400000}
+
+logging:
+  level:
+    com.garment.rbac: debug

@@ -1,0 +1,96 @@
+-- ============================================================
+-- 支付服务表结构
+-- ============================================================
+
+-- 支付单主表
+CREATE TABLE pay_payment (
+    id              BIGINT          NOT NULL COMMENT '主键（雪花算法）',
+    tenant_id       BIGINT          NOT NULL COMMENT '租户 ID',
+    payment_no      VARCHAR(64)     NOT NULL COMMENT '支付单号（业务唯一）',
+    order_id        BIGINT          NOT NULL COMMENT '关联订单 ID',
+    order_no        VARCHAR(64)     NOT NULL COMMENT '关联订单号',
+    payer_id        BIGINT          NOT NULL COMMENT '付款方 ID（用户/客户）',
+    payee_id        BIGINT          NULL     COMMENT '收款方 ID（供应商/工厂）',
+    amount          DECIMAL(12, 2)  NOT NULL COMMENT '支付金额',
+    currency        VARCHAR(16)     NOT NULL DEFAULT 'CNY' COMMENT '币种',
+    pay_method      VARCHAR(32)     NOT NULL COMMENT '支付方式: WECHAT/ALIPAY/BANK_TRANSFER/OFFLINE/CREDIT',
+    status          VARCHAR(32)     NOT NULL DEFAULT 'PENDING' COMMENT '状态: PENDING/PROCESSING/SUCCESS/FAILED/CANCELLED/REFUNDED/PARTIAL_REFUNDED',
+    channel         VARCHAR(32)     NULL     COMMENT '支付渠道: APP/H5/PC/NATIVE',
+    channel_trade_no VARCHAR(128)   NULL     COMMENT '第三方支付流水号',
+    paid_at         DATETIME        NULL     COMMENT '支付成功时间',
+    expire_at       DATETIME        NULL     COMMENT '支付过期时间',
+    remark          VARCHAR(512)    NULL     COMMENT '备注',
+    extra_info      JSON            NULL     COMMENT '扩展信息（渠道返回等）',
+    version         INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    deleted         INT             NOT NULL DEFAULT 0 COMMENT '逻辑删除: 0=正常, 1=已删除',
+    created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    created_by      BIGINT          NULL     COMMENT '创建人',
+    updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    updated_by      BIGINT          NULL     COMMENT '更新人',
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_payment_no (payment_no),
+    KEY idx_order_id (order_id),
+    KEY idx_payer_id (payer_id),
+    KEY idx_status (status),
+    KEY idx_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='支付单';
+
+-- 退款表
+CREATE TABLE pay_refund (
+    id              BIGINT          NOT NULL COMMENT '主键（雪花算法）',
+    tenant_id       BIGINT          NOT NULL COMMENT '租户 ID',
+    refund_no       VARCHAR(64)     NOT NULL COMMENT '退款单号（业务唯一）',
+    payment_id      BIGINT          NOT NULL COMMENT '关联支付单 ID',
+    payment_no      VARCHAR(64)     NOT NULL COMMENT '关联支付单号',
+    order_id        BIGINT          NOT NULL COMMENT '关联订单 ID',
+    order_no        VARCHAR(64)     NOT NULL COMMENT '关联订单号',
+    refund_amount   DECIMAL(12, 2)  NOT NULL COMMENT '退款金额',
+    reason          VARCHAR(512)    NULL     COMMENT '退款原因',
+    status          VARCHAR(32)     NOT NULL DEFAULT 'PENDING' COMMENT '状态: PENDING/PROCESSING/SUCCESS/FAILED',
+    channel_refund_no VARCHAR(128)  NULL     COMMENT '第三方退款流水号',
+    refunded_at     DATETIME        NULL     COMMENT '退款成功时间',
+    operator_id     BIGINT          NULL     COMMENT '操作人 ID',
+    remark          VARCHAR(512)    NULL     COMMENT '备注',
+    extra_info      JSON            NULL     COMMENT '扩展信息',
+    version         INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    deleted         INT             NOT NULL DEFAULT 0 COMMENT '逻辑删除: 0=正常, 1=已删除',
+    created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    created_by      BIGINT          NULL     COMMENT '创建人',
+    updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    updated_by      BIGINT          NULL     COMMENT '更新人',
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_refund_no (refund_no),
+    KEY idx_payment_id (payment_id),
+    KEY idx_order_id (order_id),
+    KEY idx_status (status),
+    KEY idx_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='退款单';
+
+-- 对账单（结算记录）
+CREATE TABLE pay_settlement (
+    id              BIGINT          NOT NULL COMMENT '主键（雪花算法）',
+    tenant_id       BIGINT          NOT NULL COMMENT '租户 ID',
+    settlement_no   VARCHAR(64)     NOT NULL COMMENT '结算单号（业务唯一）',
+    payment_id      BIGINT          NOT NULL COMMENT '关联支付单 ID',
+    payment_no      VARCHAR(64)     NOT NULL COMMENT '关联支付单号',
+    order_id        BIGINT          NOT NULL COMMENT '关联订单 ID',
+    order_no        VARCHAR(64)     NOT NULL COMMENT '关联订单号',
+    gross_amount    DECIMAL(12, 2)  NOT NULL COMMENT '应收总额',
+    fee_amount      DECIMAL(12, 2)  NOT NULL DEFAULT 0.00 COMMENT '手续费',
+    net_amount      DECIMAL(12, 2)  NOT NULL COMMENT '实际到账金额',
+    settled_at      DATETIME        NOT NULL COMMENT '结算日期',
+    status          VARCHAR(32)     NOT NULL DEFAULT 'PENDING' COMMENT '状态: PENDING/CONFIRMED/DISPUTED',
+    remark          VARCHAR(512)    NULL     COMMENT '备注',
+    version         INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    deleted         INT             NOT NULL DEFAULT 0 COMMENT '逻辑删除: 0=正常, 1=已删除',
+    created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    created_by      BIGINT          NULL     COMMENT '创建人',
+    updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    updated_by      BIGINT          NULL     COMMENT '更新人',
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_settlement_no (settlement_no),
+    KEY idx_payment_id (payment_id),
+    KEY idx_order_id (order_id),
+    KEY idx_settled_at (settled_at),
+    KEY idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='结算记录';

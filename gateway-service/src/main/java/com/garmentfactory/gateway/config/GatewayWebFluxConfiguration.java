@@ -9,7 +9,7 @@ import org.springframework.web.cors.reactive.CorsWebFilter;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
 @Configuration
-@EnableConfigurationProperties(GatewayCorsProperties.class)
+@EnableConfigurationProperties({GatewayCorsProperties.class, GatewayJwtProperties.class})
 public class GatewayWebFluxConfiguration {
 
     @Bean

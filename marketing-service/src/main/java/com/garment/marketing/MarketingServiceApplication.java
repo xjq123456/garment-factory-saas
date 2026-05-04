@@ -1,9 +1,16 @@
 package com.garment.marketing;
 
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
-@SpringBootApplication
+/**
+ * 营销服务启动类
+ */
+@SpringBootApplication(scanBasePackages = {"com.garment.marketing", "com.garment.common"})
+@EnableDiscoveryClient
+@MapperScan("com.garment.marketing.infrastructure.persistence")
 public class MarketingServiceApplication {
 
     public static void main(String[] args) {
