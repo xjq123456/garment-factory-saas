@@ -5,7 +5,7 @@ import com.garment.common.domain.ValueObject;
 /**
  * 支付状态枚举。
  */
-public enum PaymentStatus implements ValueObject {
+public enum PaymentStatus {
 
     PENDING("待支付"),
     PROCESSING("处理中"),

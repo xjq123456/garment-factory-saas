@@ -1,6 +1,7 @@
 package com.garment.style.domain.bom.entity;
 
 import com.garment.common.domain.AggregateRoot;
+import com.garment.common.domain.DomainEvent;
 import com.garment.style.domain.bom.event.BomCreatedEvent;
 import com.garment.style.domain.bom.event.BomStatusChangedEvent;
 import com.garment.style.domain.bom.event.BomUpdatedEvent;
@@ -13,8 +14,6 @@ import java.util.List;
 @Getter
 public class Bom extends AggregateRoot {
 
-    private Long id;
-    private Long tenantId;
     private Long styleId;
     private String bomCode;
     private String bomName;
@@ -25,6 +24,11 @@ public class Bom extends AggregateRoot {
 
     private Bom() {}
 
+    /**
+     * 创建BOM（工厂方法）。
+     * <p>
+     * 注意：此方法不产生领域事件，由应用层负责创建并发布 {@link BomCreatedEvent}。
+     */
     public static Bom create(Long tenantId, Long styleId, String bomCode,
                              String bomName, String versionNo, String remark) {
         Bom b = new Bom();
@@ -35,25 +39,24 @@ public class Bom extends AggregateRoot {
         b.versionNo = versionNo != null ? versionNo : "V1.0";
         b.status = BomStatus.DRAFT;
         b.remark = remark;
-        b.registerEvent(new BomCreatedEvent(tenantId, b.id, bomCode));
         return b;
     }
 
-    public void update(String bomName, String versionNo, String remark) {
+    public DomainEvent update(String bomName, String versionNo, String remark) {
         this.bomName = bomName;
         this.versionNo = versionNo;
         this.remark = remark;
-        this.registerEvent(new BomUpdatedEvent(this.tenantId, this.id, this.bomCode));
+        return new BomUpdatedEvent(this.tenantId, this.id, this.bomCode);
     }
 
-    public void confirm() {
+    public DomainEvent confirm() {
         this.status = BomStatus.CONFIRMED;
-        this.registerEvent(new BomStatusChangedEvent(this.tenantId, this.id, this.bomCode, BomStatus.CONFIRMED.getCode()));
+        return new BomStatusChangedEvent(this.tenantId, this.id, this.bomCode, BomStatus.CONFIRMED.getCode());
     }
 
-    public void deprecate() {
+    public DomainEvent deprecate() {
         this.status = BomStatus.DEPRECATED;
-        this.registerEvent(new BomStatusChangedEvent(this.tenantId, this.id, this.bomCode, BomStatus.DEPRECATED.getCode()));
+        return new BomStatusChangedEvent(this.tenantId, this.id, this.bomCode, BomStatus.DEPRECATED.getCode());
     }
 
     public void setId(Long id) {
@@ -62,5 +65,10 @@ public class Bom extends AggregateRoot {
 
     public void setItems(List<BomItem> items) {
         this.items = items != null ? items : new ArrayList<>();
+    }
+
+    /** 仅供基础设施层从数据库还原时使用，业务代码不应调用 */
+    public void overrideStatus(BomStatus status) {
+        this.status = status;
     }
 }

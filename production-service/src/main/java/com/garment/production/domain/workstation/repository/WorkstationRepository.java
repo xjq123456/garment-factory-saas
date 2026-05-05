@@ -20,13 +20,13 @@ public interface WorkstationRepository {
 
     Optional<Workstation> findByStationCode(String stationCode);
 
-    List<Workstation> findAll(Long tenantId);
+    List<Workstation> findAll();
 
-    List<Workstation> findByStatus(Long tenantId, WorkstationStatus status);
+    List<Workstation> findByStatus(WorkstationStatus status);
 
-    List<Workstation> findByType(Long tenantId, WorkstationType type);
+    List<Workstation> findByType(WorkstationType type);
 
-    List<Workstation> findAvailable(Long tenantId, WorkstationType type);
+    List<Workstation> findAvailable(WorkstationType type);
 
-    List<Workstation> findByWorkshop(Long tenantId, String workshop);
+    List<Workstation> findByWorkshop(String workshop);
 }

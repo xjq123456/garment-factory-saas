@@ -1,13 +1,16 @@
 package com.garment.payment.application.refund;
 
 import com.garment.common.domain.BizException;
-import com.garment.common.domain.TenantContext;
+import com.garment.common.domain.AuthUserContext;
+import com.garment.common.domain.DomainEvent;
 import com.garment.payment.application.refund.dto.CreateRefundCommand;
 import com.garment.payment.application.refund.dto.RefundDTO;
 import com.garment.payment.domain.payment.entity.Payment;
 import com.garment.payment.domain.payment.repository.PaymentRepository;
 import com.garment.payment.domain.refund.entity.Refund;
+import com.garment.payment.domain.refund.event.RefundCreatedEvent;
 import com.garment.payment.domain.refund.repository.RefundRepository;
+import com.garment.payment.infrastructure.event.DomainEventPublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +24,7 @@ public class RefundAppService {
 
     private final RefundRepository refundRepository;
     private final PaymentRepository paymentRepository;
+    private final DomainEventPublisher eventPublisher;
 
     /**
      * 创建退款单。
@@ -31,7 +35,7 @@ public class RefundAppService {
                 .orElseThrow(() -> new BizException("支付单不存在: " + cmd.getPaymentId()));
 
         Refund refund = Refund.create(
-                TenantContext.getTenantId(),
+                AuthUserContext.requireTenantId(),
                 payment.getId(),
                 payment.getPaymentNo().getValue(),
                 payment.getOrderId(),
@@ -43,6 +47,8 @@ public class RefundAppService {
         refund.setRemark(cmd.getRemark());
 
         Refund saved = refundRepository.save(refund);
+        eventPublisher.publish(new RefundCreatedEvent(saved.getId(), saved.getRefundNo().getValue(),
+                saved.getPaymentId(), saved.getPaymentNo(), saved.getOrderId(), saved.getRefundAmount()));
         return RefundDTO.from(saved);
     }
 
@@ -83,8 +89,9 @@ public class RefundAppService {
     public RefundDTO refundSuccess(String refundNo, String channelRefundNo) {
         Refund refund = refundRepository.findByRefundNo(refundNo)
                 .orElseThrow(() -> new BizException("退款单不存在: " + refundNo));
-        refund.markSuccess(channelRefundNo);
+        DomainEvent event = refund.markSuccess(channelRefundNo);
         Refund saved = refundRepository.save(refund);
+        eventPublisher.publish(event);
         return RefundDTO.from(saved);
     }
 

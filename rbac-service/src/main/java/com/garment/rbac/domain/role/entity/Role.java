@@ -1,6 +1,6 @@
 package com.garment.rbac.domain.role.entity;
 
-import com.garment.common.infrastructure.BaseEntity;
+import com.garment.common.domain.BaseDomainEntity;
 import com.garment.rbac.domain.role.vo.RoleStatus;
 import com.garment.rbac.domain.shared.vo.RoleKey;
 import com.garment.rbac.domain.shared.vo.RoleName;
@@ -15,10 +15,7 @@ import java.util.Set;
  */
 @Data
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public class Role extends BaseEntity {
-
-    /** 租户ID */
-    private Long tenantId;
+public class Role extends BaseDomainEntity {
 
     /** 角色名称 */
     private RoleName roleName;

@@ -22,7 +22,6 @@ public final class SkuConverter {
         d.setExtraPrice(domain.getExtraPrice());
         d.setStatus(domain.getStatus());
         d.setSortOrder(domain.getSortOrder());
-        /*d.setVersion(domain.getVersion());*/
         return d;
     }
 
@@ -34,19 +33,8 @@ public final class SkuConverter {
                 d.getBarcode(), d.getWeight(), d.getExtraPrice()
         );
         sku.setId(d.getId());
-        try {
-            java.lang.reflect.Field statusField = Sku.class.getDeclaredField("status");
-            statusField.setAccessible(true);
-            statusField.set(sku, d.getStatus());
-            java.lang.reflect.Field sortField = Sku.class.getDeclaredField("sortOrder");
-            sortField.setAccessible(true);
-            sortField.set(sku, d.getSortOrder());
-            java.lang.reflect.Field versionField = Sku.class.getDeclaredField("version");
-            versionField.setAccessible(true);
-            versionField.set(sku, d.getVersion());
-        } catch (Exception e) {
-            // ignore
-        }
+        sku.overrideStatus(d.getStatus());
+        sku.setSortOrder(d.getSortOrder());
         return sku;
     }
 }

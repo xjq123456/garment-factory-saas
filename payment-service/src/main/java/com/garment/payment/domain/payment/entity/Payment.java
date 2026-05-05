@@ -2,12 +2,14 @@ package com.garment.payment.domain.payment.entity;
 
 import com.garment.common.domain.AggregateRoot;
 import com.garment.common.domain.BizException;
+import com.garment.common.domain.DomainEvent;
 import com.garment.payment.domain.shared.vo.PayMethod;
 import com.garment.payment.domain.shared.vo.PaymentNo;
 import com.garment.payment.domain.shared.vo.PaymentStatus;
 import com.garment.payment.domain.payment.event.PaymentCreatedEvent;
 import com.garment.payment.domain.payment.event.PaymentSuccessEvent;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -16,10 +18,9 @@ import java.time.LocalDateTime;
  * 支付单聚合根。
  */
 @Getter
+@Setter
 public class Payment extends AggregateRoot {
 
-    private Long id;
-    private Long tenantId;
     private PaymentNo paymentNo;
     private Long orderId;
     private String orderNo;
@@ -34,18 +35,18 @@ public class Payment extends AggregateRoot {
     private LocalDateTime paidAt;
     private LocalDateTime expireAt;
     private String remark;
-    private Integer version;
 
-    protected Payment() {}
+    public Payment() {}
 
     /**
      * 创建支付单（工厂方法）。
+     * <p>
+     * 返回 {@link PaymentCreatedEvent}，由应用层负责发布。
      */
     public static Payment create(Long tenantId, Long orderId, String orderNo,
                                  Long payerId, Long payeeId, BigDecimal amount,
                                  PayMethod payMethod, String channel, String remark) {
         Payment p = new Payment();
-        p.id = nextId();
         p.tenantId = tenantId;
         p.paymentNo = PaymentNo.generate();
         p.orderId = orderId;
@@ -61,23 +62,21 @@ public class Payment extends AggregateRoot {
         p.remark = remark;
         p.version = 0;
 
-        p.addEvent(new PaymentCreatedEvent(p.id, p.paymentNo.getValue(), p.orderId,
-                p.orderNo, p.payerId, p.amount));
         return p;
     }
 
     /**
-     * 标记支付成功。
+     * 标记支付成功，返回领域事件。
      */
-    public void markSuccess(String channelTradeNo) {
+    public DomainEvent markSuccess(String channelTradeNo) {
         if (this.status != PaymentStatus.PENDING && this.status != PaymentStatus.PROCESSING) {
             throw new BizException("当前状态不允许标记为成功");
         }
         this.status = PaymentStatus.SUCCESS;
         this.channelTradeNo = channelTradeNo;
         this.paidAt = LocalDateTime.now();
-        this.addEvent(new PaymentSuccessEvent(this.id, this.paymentNo.getValue(),
-                this.orderId, this.orderNo, this.payerId, this.amount));
+        return new PaymentSuccessEvent(this.id, this.paymentNo.getValue(),
+                this.orderId, this.orderNo, this.payerId, this.amount);
     }
 
     /**

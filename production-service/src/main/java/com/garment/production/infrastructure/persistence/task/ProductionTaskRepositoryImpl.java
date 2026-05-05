@@ -86,11 +86,9 @@ public class ProductionTaskRepositoryImpl implements ProductionTaskRepository {
     }
 
     @Override
-    public PageResult<ProductionTask> findPage(Long tenantId, Long orderId, Long workerId,
+    public PageResult<ProductionTask> findPage(Long orderId, Long workerId,
                                                 TaskStatus status, int page, int size) {
         LambdaQueryWrapper<ProductionTaskDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(ProductionTaskDO::getTenantId, tenantId);
-
         if (orderId != null) {
             wrapper.eq(ProductionTaskDO::getOrderId, orderId);
         }
@@ -112,10 +110,9 @@ public class ProductionTaskRepositoryImpl implements ProductionTaskRepository {
     }
 
     @Override
-    public List<ProductionTask> findOverdueTasks(Long tenantId) {
+    public List<ProductionTask> findOverdueTasks() {
         LambdaQueryWrapper<ProductionTaskDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(ProductionTaskDO::getTenantId, tenantId)
-                .lt(ProductionTaskDO::getPlanEndTime, LocalDateTime.now())
+        wrapper.lt(ProductionTaskDO::getPlanEndTime, LocalDateTime.now())
                 .notIn(ProductionTaskDO::getStatus,
                         TaskStatus.COMPLETED.getCode(), TaskStatus.CANCELLED.getCode());
         return mapper.selectList(wrapper).stream()

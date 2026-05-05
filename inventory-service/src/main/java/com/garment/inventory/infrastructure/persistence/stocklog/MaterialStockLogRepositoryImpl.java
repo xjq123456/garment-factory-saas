@@ -1,7 +1,7 @@
 package com.garment.inventory.infrastructure.persistence.stocklog;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.garment.common.domain.TenantContext;
+import com.garment.common.domain.AuthUserContext;
 import com.garment.inventory.domain.stocklog.entity.MaterialStockLog;
 import com.garment.inventory.domain.stocklog.repository.MaterialStockLogRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +23,7 @@ public class MaterialStockLogRepositoryImpl implements MaterialStockLogRepositor
     @Override
     public void save(MaterialStockLog log) {
         MaterialStockLogDO DO = materialStockLogConverter.toDO(log);
-        DO.setTenantId(TenantContext.getTenantId());
+        DO.setTenantId(AuthUserContext.getTenantId());
         materialStockLogMapper.insert(DO);
     }
 
@@ -37,7 +37,7 @@ public class MaterialStockLogRepositoryImpl implements MaterialStockLogRepositor
     @Override
     public List<MaterialStockLog> findByMaterialId(Long materialId) {
         LambdaQueryWrapper<MaterialStockLogDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(MaterialStockLogDO::getTenantId, TenantContext.getTenantId())
+        wrapper.eq(MaterialStockLogDO::getTenantId, AuthUserContext.getTenantId())
                 .eq(MaterialStockLogDO::getMaterialId, materialId)
                 .orderByDesc(MaterialStockLogDO::getCreateTime);
         List<MaterialStockLogDO> list = materialStockLogMapper.selectList(wrapper);
@@ -47,7 +47,7 @@ public class MaterialStockLogRepositoryImpl implements MaterialStockLogRepositor
     @Override
     public List<MaterialStockLog> findByWarehouseIdAndMaterialId(Long warehouseId, Long materialId) {
         LambdaQueryWrapper<MaterialStockLogDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(MaterialStockLogDO::getTenantId, TenantContext.getTenantId())
+        wrapper.eq(MaterialStockLogDO::getTenantId, AuthUserContext.getTenantId())
                 .eq(MaterialStockLogDO::getWarehouseId, warehouseId)
                 .eq(MaterialStockLogDO::getMaterialId, materialId)
                 .orderByDesc(MaterialStockLogDO::getCreateTime);
@@ -58,7 +58,7 @@ public class MaterialStockLogRepositoryImpl implements MaterialStockLogRepositor
     @Override
     public List<MaterialStockLog> findByBizNo(String bizNo) {
         LambdaQueryWrapper<MaterialStockLogDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(MaterialStockLogDO::getTenantId, TenantContext.getTenantId())
+        wrapper.eq(MaterialStockLogDO::getTenantId, AuthUserContext.getTenantId())
                 .eq(MaterialStockLogDO::getBizNo, bizNo)
                 .orderByDesc(MaterialStockLogDO::getCreateTime);
         List<MaterialStockLogDO> list = materialStockLogMapper.selectList(wrapper);

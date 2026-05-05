@@ -1,6 +1,6 @@
 package com.garment.search.application.index;
 
-import com.garment.common.domain.TenantContext;
+import com.garment.common.domain.AuthUserContext;
 import com.garment.search.domain.index.model.IndexType;
 import com.garment.search.domain.index.model.SearchDocument;
 import com.garment.search.domain.index.repository.SearchRepository;
@@ -27,7 +27,7 @@ public class SearchIndexAppService {
      */
     public void indexDocument(String id, String indexType, String title,
                               String body, Map<String, Object> attributes) {
-        Long tenantId = TenantContext.getTenantId();
+        Long tenantId = AuthUserContext.requireTenantId();
         SearchDocument document = SearchDocument.builder()
                 .id(id)
                 .indexType(IndexType.fromCode(indexType))

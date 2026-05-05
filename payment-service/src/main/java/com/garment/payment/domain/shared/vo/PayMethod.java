@@ -5,7 +5,7 @@ import com.garment.common.domain.ValueObject;
 /**
  * 支付方式枚举。
  */
-public enum PayMethod implements ValueObject {
+public enum PayMethod {
 
     WECHAT("微信支付"),
     ALIPAY("支付宝"),

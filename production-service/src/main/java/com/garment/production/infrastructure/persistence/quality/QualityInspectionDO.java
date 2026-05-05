@@ -31,9 +31,9 @@ public class QualityInspectionDO {
     private String inspectorName;
     private LocalDateTime inspectionTime;
     private String remark;
-    private String createBy;
+    private Long createBy;
     private LocalDateTime createTime;
-    private String updateBy;
+    private Long updateBy;
     private LocalDateTime updateTime;
     private Integer deleted;
 }

@@ -17,7 +17,7 @@ public class OrderStatusChangedEvent extends DomainEvent {
 
     public OrderStatusChangedEvent(Long orderId, String orderNo,
                                    OrderStatus oldStatus, OrderStatus newStatus) {
-        super("OrderStatusChanged");
+        super();
         this.orderId = orderId;
         this.orderNo = orderNo;
         this.oldStatus = oldStatus;

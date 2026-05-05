@@ -24,13 +24,7 @@ public final class CategoryConverter {
         Category c = Category.create(d.getTenantId(), d.getParentId(), d.getName(),
                 d.getSortOrder(), d.getIcon());
         c.setId(d.getId());
-        try {
-            java.lang.reflect.Field statusField = Category.class.getDeclaredField("status");
-            statusField.setAccessible(true);
-            statusField.set(c, d.getStatus());
-        } catch (Exception e) {
-            // ignore
-        }
+        c.overrideStatus(d.getStatus());
         return c;
     }
 }

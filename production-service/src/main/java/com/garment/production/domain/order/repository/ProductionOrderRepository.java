@@ -35,26 +35,26 @@ public interface ProductionOrderRepository {
     /**
      * 分页查询
      */
-    PageResult<ProductionOrder> findPage(Long tenantId, String keyword, OrderStatus status,
+    PageResult<ProductionOrder> findPage(String keyword, OrderStatus status,
                                           Integer priority, int page, int size);
 
     /**
      * 查询指定状态的工单列表
      */
-    List<ProductionOrder> findByStatus(Long tenantId, OrderStatus status);
+    List<ProductionOrder> findByStatus(OrderStatus status);
 
     /**
      * 查询指定款式的工单列表
      */
-    List<ProductionOrder> findByStyleId(Long tenantId, Long styleId);
+    List<ProductionOrder> findByStyleId(Long styleId);
 
     /**
      * 查询逾期工单
      */
-    List<ProductionOrder> findOverdueOrders(Long tenantId);
+    List<ProductionOrder> findOverdueOrders();
 
     /**
      * 统计各状态工单数量
      */
-    long countByStatus(Long tenantId, OrderStatus status);
+    long countByStatus(OrderStatus status);
 }

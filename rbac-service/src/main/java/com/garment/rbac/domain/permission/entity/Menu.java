@@ -1,6 +1,6 @@
 package com.garment.rbac.domain.permission.entity;
 
-import com.garment.common.infrastructure.BaseEntity;
+import com.garment.common.domain.BaseDomainEntity;
 import com.garment.rbac.domain.permission.vo.MenuType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -13,9 +13,8 @@ import java.util.List;
  */
 @Data
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public class Menu extends BaseEntity {
+public class Menu extends BaseDomainEntity {
 
-    private Long tenantId;
     private Long parentId;
     private String menuName;
     private MenuType menuType;

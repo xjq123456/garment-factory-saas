@@ -1,6 +1,7 @@
 package com.garment.style.domain.sku.entity;
 
 import com.garment.common.domain.AggregateRoot;
+import com.garment.common.domain.DomainEvent;
 import com.garment.style.domain.sku.event.SkuCreatedEvent;
 import com.garment.style.domain.sku.event.SkuUpdatedEvent;
 import lombok.Getter;
@@ -10,8 +11,6 @@ import java.math.BigDecimal;
 @Getter
 public class Sku extends AggregateRoot {
 
-    private Long id;
-    private Long tenantId;
     private Long styleId;
     private String skuCode;
     private String color;
@@ -28,6 +27,11 @@ public class Sku extends AggregateRoot {
 
     private Sku() {}
 
+    /**
+     * 创建SKU（工厂方法）。
+     * <p>
+     * 注意：此方法不产生领域事件，由应用层负责创建并发布 {@link SkuCreatedEvent}。
+     */
     public static Sku create(Long tenantId, Long styleId, String skuCode,
                              String color, String colorCode, String size,
                              String sizeType, String barcode,
@@ -45,11 +49,10 @@ public class Sku extends AggregateRoot {
         s.extraPrice = extraPrice != null ? extraPrice : BigDecimal.ZERO;
         s.status = 1;
         s.sortOrder = 0;
-        s.registerEvent(new SkuCreatedEvent(tenantId, styleId, skuCode));
         return s;
     }
 
-    public void update(String color, String colorCode, String size, String sizeType,
+    public DomainEvent update(String color, String colorCode, String size, String sizeType,
                        String barcode, BigDecimal weight, BigDecimal extraPrice) {
         this.color = color;
         this.colorCode = colorCode;
@@ -58,7 +61,7 @@ public class Sku extends AggregateRoot {
         this.barcode = barcode;
         this.weight = weight;
         this.extraPrice = extraPrice;
-        this.registerEvent(new SkuUpdatedEvent(this.tenantId, this.id, this.skuCode));
+        return new SkuUpdatedEvent(this.tenantId, this.id, this.skuCode);
     }
 
     public void disable() {
@@ -75,5 +78,10 @@ public class Sku extends AggregateRoot {
 
     public void setSortOrder(Integer sortOrder) {
         this.sortOrder = sortOrder;
+    }
+
+    /** 仅供基础设施层从数据库还原时使用，业务代码不应调用 */
+    public void overrideStatus(Integer status) {
+        this.status = status;
     }
 }

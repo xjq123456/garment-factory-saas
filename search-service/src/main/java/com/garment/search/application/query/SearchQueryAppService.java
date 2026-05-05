@@ -1,6 +1,6 @@
 package com.garment.search.application.query;
 
-import com.garment.common.domain.TenantContext;
+import com.garment.common.domain.AuthUserContext;
 import com.garment.search.application.query.dto.SearchRequest;
 import com.garment.search.domain.index.model.SearchResult;
 import com.garment.search.domain.index.model.SuggestResult;
@@ -25,9 +25,8 @@ public class SearchQueryAppService {
      * 统一搜索。
      */
     public SearchResult search(SearchRequest request) {
-        Long tenantId = TenantContext.getTenantId();
-        log.info("搜索请求: keyword={}, indexTypes={}, tenantId={}", 
-                request.getKeyword(), request.getIndexTypes(), tenantId);
+        log.info("搜索请求: keyword={}, indexTypes={}",
+                request.getKeyword(), request.getIndexTypes());
 
         return searchRepository.search(
                 request.getKeyword(),
@@ -36,8 +35,7 @@ public class SearchQueryAppService {
                 request.getSortField(),
                 request.isSortDesc(),
                 request.getPage(),
-                request.getSize(),
-                tenantId
+                request.getSize()
         );
     }
 
@@ -45,8 +43,7 @@ public class SearchQueryAppService {
      * 搜索建议（自动补全）。
      */
     public List<SuggestResult> suggest(String keyword, String indexType) {
-        Long tenantId = TenantContext.getTenantId();
-        log.info("搜索建议: keyword={}, indexType={}, tenantId={}", keyword, indexType, tenantId);
-        return searchRepository.suggest(keyword, indexType, tenantId);
+        log.info("搜索建议: keyword={}, indexType={}", keyword, indexType);
+        return searchRepository.suggest(keyword, indexType);
     }
 }

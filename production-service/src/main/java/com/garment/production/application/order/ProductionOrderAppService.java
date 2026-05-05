@@ -1,7 +1,6 @@
 package com.garment.production.application.order;
 
 import com.garment.common.domain.BizException;
-import com.garment.common.domain.TenantContext;
 import com.garment.common.interfaces.PageResult;
 import com.garment.production.application.order.dto.CreateProductionOrderCommand;
 import com.garment.production.application.order.dto.ProductionOrderVO;
@@ -44,8 +43,6 @@ public class ProductionOrderAppService {
      */
     @Transactional
     public ProductionOrderVO createOrder(CreateProductionOrderCommand cmd) {
-        Long tenantId = TenantContext.getTenantId();
-
         // 生成工单编号
         String orderNo = generateOrderNo();
 
@@ -54,7 +51,6 @@ public class ProductionOrderAppService {
                 orderNo, cmd.getStyleId(), cmd.getStyleCode(),
                 cmd.getStyleName(), cmd.getTotalQty(), cmd.getUnit()
         );
-        order.setTenantId(tenantId);
         order.setSkuId(cmd.getSkuId());
         order.setSkuCode(cmd.getSkuCode());
         order.setCustomerName(cmd.getCustomerName());
@@ -136,7 +132,6 @@ public class ProductionOrderAppService {
                 ProductionTask task = ProductionTask.create(
                         taskNo, orderId, step.getId(), step.getStepName(), order.getTotalQty()
                 );
-                task.setTenantId(order.getTenantId());
                 task.setRouteId(routeId);
                 task.setPriority(order.getPriority());
                 taskRepository.save(task);
@@ -218,9 +213,8 @@ public class ProductionOrderAppService {
      */
     public PageResult<ProductionOrderVO> findOrders(String keyword, OrderStatus status,
                                                      Integer priority, int page, int size) {
-        Long tenantId = TenantContext.getTenantId();
         PageResult<ProductionOrder> pageResult = orderRepository.findPage(
-                tenantId, keyword, status, priority, page, size);
+                keyword, status, priority, page, size);
 
         List<ProductionOrderVO> voList = pageResult.getRecords().stream()
                 .map(this::toVO)
@@ -233,8 +227,7 @@ public class ProductionOrderAppService {
      * 查询逾期工单
      */
     public List<ProductionOrderVO> findOverdueOrders() {
-        Long tenantId = TenantContext.getTenantId();
-        return orderRepository.findOverdueOrders(tenantId).stream()
+        return orderRepository.findOverdueOrders().stream()
                 .map(this::toVO)
                 .collect(Collectors.toList());
     }
@@ -258,6 +251,7 @@ public class ProductionOrderAppService {
         ProductionOrderVO vo = new ProductionOrderVO();
         vo.setId(order.getId());
         vo.setOrderNo(order.getOrderNo());
+        vo.setRouteId(order.getRouteId());
         vo.setStyleId(order.getStyleId());
         vo.setStyleCode(order.getStyleCode());
         vo.setStyleName(order.getStyleName());
@@ -276,9 +270,9 @@ public class ProductionOrderAppService {
         vo.setCompletionRate(order.getCompletionRate());
         vo.setOverdue(order.isOverdue());
         vo.setRemark(order.getRemark());
-        vo.setCreateBy(order.getCreateBy());
+        vo.setCreateBy(String.valueOf(order.getCreateBy()));
         vo.setCreateTime(order.getCreateTime());
-        vo.setUpdateBy(order.getUpdateBy());
+        vo.setUpdateBy(String.valueOf(order.getUpdateBy()));
         vo.setUpdateTime(order.getUpdateTime());
         return vo;
     }

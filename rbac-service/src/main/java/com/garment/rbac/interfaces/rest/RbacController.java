@@ -1,6 +1,6 @@
 package com.garment.rbac.interfaces.rest;
 
-import com.garment.common.domain.TenantContext;
+import com.garment.common.domain.AuthUserContext;
 import com.garment.common.interfaces.R;
 import com.garment.rbac.application.RbacAppService;
 import com.garment.rbac.domain.permission.entity.Menu;

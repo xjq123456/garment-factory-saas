@@ -18,9 +18,9 @@ public interface ProcessRouteRepository {
 
     Optional<ProcessRoute> findByRouteCode(String routeCode);
 
-    List<ProcessRoute> findAll(Long tenantId);
+    List<ProcessRoute> findAll();
 
-    List<ProcessRoute> findByStyleId(Long tenantId, Long styleId);
+    List<ProcessRoute> findByStyleId(Long styleId);
 
-    List<ProcessRoute> findByStatus(Long tenantId, String status);
+    List<ProcessRoute> findByStatus(String status);
 }

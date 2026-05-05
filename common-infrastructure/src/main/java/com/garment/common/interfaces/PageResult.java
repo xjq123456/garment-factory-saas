@@ -44,6 +44,14 @@ public class PageResult<T> implements Serializable {
         this.records = records;
     }
 
+    public PageResult(List<T> records, long total, int pageNum, int pageSize) {
+        this.pageNum = pageNum;
+        this.pageSize = pageSize;
+        this.total = total;
+        this.pages = pageSize > 0 ? (total + pageSize - 1) / pageSize : 0;
+        this.records = records;
+    }
+
     /**
      * 从 MyBatis Plus 的 IPage 转换。
      */

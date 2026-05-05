@@ -49,39 +49,35 @@ public class WorkstationRepositoryImpl implements WorkstationRepository {
     }
 
     @Override
-    public List<Workstation> findAll(Long tenantId) {
+    public List<Workstation> findAll() {
         LambdaQueryWrapper<WorkstationDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(WorkstationDO::getTenantId, tenantId);
         return mapper.selectList(wrapper).stream()
                 .map(converter::toEntity)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<Workstation> findByStatus(Long tenantId, WorkstationStatus status) {
+    public List<Workstation> findByStatus(WorkstationStatus status) {
         LambdaQueryWrapper<WorkstationDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(WorkstationDO::getTenantId, tenantId)
-                .eq(WorkstationDO::getStatus, status.getCode());
+        wrapper.eq(WorkstationDO::getStatus, status.getCode());
         return mapper.selectList(wrapper).stream()
                 .map(converter::toEntity)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<Workstation> findByType(Long tenantId, WorkstationType type) {
+    public List<Workstation> findByType(WorkstationType type) {
         LambdaQueryWrapper<WorkstationDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(WorkstationDO::getTenantId, tenantId)
-                .eq(WorkstationDO::getStationType, type.getCode());
+        wrapper.eq(WorkstationDO::getStationType, type.getCode());
         return mapper.selectList(wrapper).stream()
                 .map(converter::toEntity)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<Workstation> findAvailable(Long tenantId, WorkstationType type) {
+    public List<Workstation> findAvailable(WorkstationType type) {
         LambdaQueryWrapper<WorkstationDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(WorkstationDO::getTenantId, tenantId)
-                .eq(WorkstationDO::getStatus, WorkstationStatus.IDLE.getCode());
+        wrapper.eq(WorkstationDO::getStatus, WorkstationStatus.IDLE.getCode());
         if (type != null) {
             wrapper.eq(WorkstationDO::getStationType, type.getCode());
         }
@@ -91,10 +87,9 @@ public class WorkstationRepositoryImpl implements WorkstationRepository {
     }
 
     @Override
-    public List<Workstation> findByWorkshop(Long tenantId, String workshop) {
+    public List<Workstation> findByWorkshop(String workshop) {
         LambdaQueryWrapper<WorkstationDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(WorkstationDO::getTenantId, tenantId)
-                .eq(WorkstationDO::getWorkshop, workshop);
+        wrapper.eq(WorkstationDO::getWorkshop, workshop);
         return mapper.selectList(wrapper).stream()
                 .map(converter::toEntity)
                 .collect(Collectors.toList());

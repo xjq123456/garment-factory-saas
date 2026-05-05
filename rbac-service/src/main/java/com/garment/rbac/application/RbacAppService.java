@@ -1,7 +1,7 @@
 package com.garment.rbac.application;
 
 import com.garment.common.domain.BizException;
-import com.garment.common.domain.TenantContext;
+import com.garment.common.domain.AuthUserContext;
 import com.garment.rbac.domain.permission.entity.Menu;
 import com.garment.rbac.domain.permission.repository.MenuRepository;
 import com.garment.rbac.domain.permission.vo.MenuType;
@@ -28,7 +28,7 @@ public class RbacAppService {
 
     @Transactional
     public Role createRole(String roleName, String roleKey, Integer sortOrder, String remark) {
-        Long tenantId = TenantContext.getTenantId();
+        Long tenantId = AuthUserContext.requireTenantId();
         roleRepository.findByRoleKey(roleKey, tenantId).ifPresent(r -> {
             throw new BizException("角色标识已存在: " + roleKey);
         });
@@ -71,7 +71,7 @@ public class RbacAppService {
     }
 
     public List<Role> listRoles() {
-        Long tenantId = TenantContext.getTenantId();
+        Long tenantId = AuthUserContext.requireTenantId();
         return roleRepository.findAll(tenantId);
     }
 
@@ -81,7 +81,7 @@ public class RbacAppService {
     public Menu createMenu(Long parentId, String menuName, int menuType,
                            String path, String component, String icon,
                            String permission, Integer sortOrder, Integer visible, String remark) {
-        Long tenantId = TenantContext.getTenantId();
+        Long tenantId = AuthUserContext.requireTenantId();
         MenuType type = MenuType.fromCode(menuType);
         Menu menu = Menu.create(tenantId, parentId, menuName, type, path, component, icon, permission, sortOrder);
         menu.setVisible(visible);
@@ -117,12 +117,12 @@ public class RbacAppService {
     }
 
     public List<Menu> listMenus() {
-        Long tenantId = TenantContext.getTenantId();
+        Long tenantId = AuthUserContext.requireTenantId();
         return menuRepository.findAll(tenantId);
     }
 
     public List<Menu> getMenuTree() {
-        Long tenantId = TenantContext.getTenantId();
+        Long tenantId = AuthUserContext.requireTenantId();
         List<Menu> allMenus = menuRepository.findAll(tenantId);
         return buildTree(allMenus, 0L);
     }

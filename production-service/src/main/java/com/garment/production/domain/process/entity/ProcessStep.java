@@ -1,6 +1,6 @@
 package com.garment.production.domain.process.entity;
 
-import com.garment.common.domain.BaseEntity;
+import com.garment.common.domain.BaseDomainEntity;
 import com.garment.production.domain.workstation.vo.WorkstationType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -16,7 +16,7 @@ import java.math.BigDecimal;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-public class ProcessStep extends BaseEntity {
+public class ProcessStep extends BaseDomainEntity {
 
     /** 主键ID */
     private Long id;

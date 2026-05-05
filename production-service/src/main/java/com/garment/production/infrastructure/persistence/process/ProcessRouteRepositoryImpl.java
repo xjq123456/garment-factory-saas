@@ -91,29 +91,26 @@ public class ProcessRouteRepositoryImpl implements ProcessRouteRepository {
     }
 
     @Override
-    public List<ProcessRoute> findAll(Long tenantId) {
+    public List<ProcessRoute> findAll() {
         LambdaQueryWrapper<ProcessRouteDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(ProcessRouteDO::getTenantId, tenantId);
         return routeMapper.selectList(wrapper).stream()
                 .map(routeConverter::toEntity)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<ProcessRoute> findByStyleId(Long tenantId, Long styleId) {
+    public List<ProcessRoute> findByStyleId(Long styleId) {
         LambdaQueryWrapper<ProcessRouteDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(ProcessRouteDO::getTenantId, tenantId)
-                .eq(ProcessRouteDO::getStyleId, styleId);
+        wrapper.eq(ProcessRouteDO::getStyleId, styleId);
         return routeMapper.selectList(wrapper).stream()
                 .map(routeConverter::toEntity)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<ProcessRoute> findByStatus(Long tenantId, String status) {
+    public List<ProcessRoute> findByStatus(String status) {
         LambdaQueryWrapper<ProcessRouteDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(ProcessRouteDO::getTenantId, tenantId)
-                .eq(ProcessRouteDO::getStatus, status);
+        wrapper.eq(ProcessRouteDO::getStatus, status);
         return routeMapper.selectList(wrapper).stream()
                 .map(routeConverter::toEntity)
                 .collect(Collectors.toList());

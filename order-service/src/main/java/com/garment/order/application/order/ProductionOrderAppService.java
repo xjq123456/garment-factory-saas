@@ -1,13 +1,15 @@
 package com.garment.order.application.order;
 
 import com.garment.common.domain.BizException;
-import com.garment.common.domain.TenantContext;
+import com.garment.common.domain.AuthUserContext;
+import com.garment.common.domain.DomainEvent;
 import com.garment.common.interfaces.PageResult;
 import com.garment.order.application.order.dto.CreateProductionOrderCommand;
 import com.garment.order.domain.order.entity.ProductionOrder;
 import com.garment.order.domain.order.entity.ProductionOrderItem;
 import com.garment.order.domain.order.repository.ProductionOrderRepository;
 import com.garment.order.domain.order.vo.OrderStatus;
+import com.garment.order.infrastructure.event.DomainEventPublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,12 +20,13 @@ import java.util.concurrent.atomic.AtomicLong;
 public class ProductionOrderAppService {
 
     private final ProductionOrderRepository orderRepo;
+    private final DomainEventPublisher eventPublisher;
     private static final AtomicLong SEQ = new AtomicLong(System.currentTimeMillis() % 10000);
 
     @Transactional
     public ProductionOrder create(CreateProductionOrderCommand cmd) {
         String orderNo = "PO" + System.currentTimeMillis() + SEQ.incrementAndGet() % 1000;
-        Long tenantId = TenantContext.getTenantId();
+        Long tenantId = AuthUserContext.requireTenantId();
         ProductionOrder order = new ProductionOrder(null, tenantId, orderNo);
         order.setCustomerId(cmd.getCustomerId());
         order.setCustomerName(cmd.getCustomerName());
@@ -51,15 +54,16 @@ public class ProductionOrderAppService {
     @Transactional
     public void confirm(Long id) {
         ProductionOrder order = orderRepo.findById(id)
-                .orElseThrow(() -> BizException.of("加工单不存在"));
-        order.confirm();
+                .orElseThrow(() -> new BizException("加工单不存在"));
+        DomainEvent event = order.confirm();
         orderRepo.save(order);
+        eventPublisher.publish(event);
     }
 
     @Transactional
     public void startProduction(Long id) {
         ProductionOrder order = orderRepo.findById(id)
-                .orElseThrow(() -> BizException.of("加工单不存在"));
+                .orElseThrow(() -> new BizException("加工单不存在"));
         order.startProduction();
         orderRepo.save(order);
     }
@@ -67,7 +71,7 @@ public class ProductionOrderAppService {
     @Transactional
     public void complete(Long id) {
         ProductionOrder order = orderRepo.findById(id)
-                .orElseThrow(() -> BizException.of("加工单不存在"));
+                .orElseThrow(() -> new BizException("加工单不存在"));
         order.complete();
         orderRepo.save(order);
     }
@@ -75,14 +79,14 @@ public class ProductionOrderAppService {
     @Transactional
     public void cancel(Long id) {
         ProductionOrder order = orderRepo.findById(id)
-                .orElseThrow(() -> BizException.of("加工单不存在"));
+                .orElseThrow(() -> new BizException("加工单不存在"));
         order.cancel();
         orderRepo.save(order);
     }
 
     public ProductionOrder findById(Long id) {
         return orderRepo.findById(id)
-                .orElseThrow(() -> BizException.of("加工单不存在"));
+                .orElseThrow(() -> new BizException("加工单不存在"));
     }
 
     public PageResult<ProductionOrder> findPage(int pageNum, int pageSize, String keyword, OrderStatus status) {
@@ -92,9 +96,9 @@ public class ProductionOrderAppService {
     @Transactional
     public void delete(Long id) {
         ProductionOrder order = orderRepo.findById(id)
-                .orElseThrow(() -> BizException.of("加工单不存在"));
+                .orElseThrow(() -> new BizException("加工单不存在"));
         if (order.getStatus() != OrderStatus.DRAFT) {
-            throw BizException.of("只有草稿状态的加工单才能删除");
+            throw new BizException("只有草稿状态的加工单才能删除");
         }
         orderRepo.deleteById(id);
     }

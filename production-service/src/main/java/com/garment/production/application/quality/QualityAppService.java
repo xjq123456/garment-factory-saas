@@ -1,7 +1,7 @@
 package com.garment.production.application.quality;
 
+import com.garment.common.domain.AuthUserContext;
 import com.garment.common.domain.BizException;
-import com.garment.common.domain.TenantContext;
 import com.garment.common.interfaces.PageResult;
 import com.garment.production.application.quality.dto.CreateInspectionCommand;
 import com.garment.production.application.quality.dto.QualityInspectionVO;
@@ -34,15 +34,12 @@ public class QualityAppService {
      */
     @Transactional
     public QualityInspectionVO createInspection(CreateInspectionCommand cmd) {
-        Long tenantId = TenantContext.getTenantId();
-
         String inspectionNo = generateInspectionNo();
         QualityInspection inspection = QualityInspection.create(
                 inspectionNo, cmd.getOrderId(),
                 InspectionType.valueOf(cmd.getInspectionType()),
                 cmd.getInspectQty()
         );
-        inspection.setTenantId(tenantId);
         inspection.setTaskId(cmd.getTaskId());
         inspection.setRemark(cmd.getRemark());
 
@@ -107,7 +104,7 @@ public class QualityAppService {
     public PageResult<QualityInspectionVO> findInspections(Long orderId, InspectionType type,
                                                             InspectionResult result,
                                                             int page, int size) {
-        Long tenantId = TenantContext.getTenantId();
+        Long tenantId = AuthUserContext.requireTenantId();
         PageResult<QualityInspection> pageResult = inspectionRepository.findPage(
                 tenantId, orderId, type, result, page, size);
 

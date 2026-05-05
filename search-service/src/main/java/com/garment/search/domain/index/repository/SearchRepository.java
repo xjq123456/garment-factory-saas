@@ -37,15 +37,14 @@ public interface SearchRepository {
      * @param sortDesc   是否降序
      * @param page       页码（从0开始）
      * @param size       每页大小
-     * @param tenantId   租户ID
      * @return 搜索结果
      */
     SearchResult search(String keyword, List<String> indexTypes,
                         Map<String, Object> filters, String sortField,
-                        boolean sortDesc, int page, int size, Long tenantId);
+                        boolean sortDesc, int page, int size);
 
     /**
      * 搜索建议（自动补全）。
      */
-    List<SuggestResult> suggest(String keyword, String indexType, Long tenantId);
+    List<SuggestResult> suggest(String keyword, String indexType);
 }

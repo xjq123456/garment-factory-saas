@@ -1,6 +1,7 @@
 package com.garment.order.domain.sales.entity;
 
 import com.garment.common.domain.AggregateRoot;
+import com.garment.common.domain.DomainEvent;
 import com.garment.order.domain.sales.vo.SalesOrderStatus;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -29,7 +30,9 @@ public class SalesOrder extends AggregateRoot {
     private List<SalesOrderItem> items = new ArrayList<>();
 
     public SalesOrder(Long id, Long tenantId, String orderNo) {
-        super(id, tenantId);
+        super();
+        this.setId(id);
+        this.setTenantId(tenantId);
         this.orderNo = orderNo;
         this.status = SalesOrderStatus.DRAFT;
         this.totalAmount = BigDecimal.ZERO;
@@ -43,18 +46,28 @@ public class SalesOrder extends AggregateRoot {
         this.status = SalesOrderStatus.CONFIRMED;
     }
 
-    public void ship() {
+    /**
+     * 发货，返回领域事件。
+     */
+    public DomainEvent ship() {
         if (status != SalesOrderStatus.CONFIRMED) {
             throw new IllegalStateException("只有已确认的销售单才能发货");
         }
         this.status = SalesOrderStatus.SHIPPED;
+        return new com.garment.order.domain.sales.event.OrderShippedEvent(
+                this.getId(), this.getOrderNo(), this.getTenantId());
     }
 
-    public void complete() {
+    /**
+     * 完成，返回领域事件。
+     */
+    public DomainEvent complete() {
         if (status != SalesOrderStatus.SHIPPED) {
             throw new IllegalStateException("只有已发货的销售单才能完成");
         }
         this.status = SalesOrderStatus.COMPLETED;
+        return new com.garment.order.domain.sales.event.OrderCompletedEvent(
+                this.getId(), this.getOrderNo(), this.getTenantId());
     }
 
     public void cancel() {

@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
-import org.springframework.data.elasticsearch.client.elc.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
@@ -93,8 +92,9 @@ public class ElasticsearchSearchRepository implements SearchRepository {
     @Override
     public SearchResult search(String keyword, List<String> indexTypes,
                                Map<String, Object> filters, String sortField,
-                               boolean sortDesc, int page, int size, Long tenantId) {
+                               boolean sortDesc, int page, int size) {
         long startTime = System.currentTimeMillis();
+        Long tenantId = com.garment.common.domain.AuthUserContext.requireTenantId();
 
         // 确定搜索的索引列表
         List<String> indexNames = resolveSearchIndexes(tenantId, indexTypes);
@@ -156,7 +156,8 @@ public class ElasticsearchSearchRepository implements SearchRepository {
     }
 
     @Override
-    public List<SuggestResult> suggest(String keyword, String indexType, Long tenantId) {
+    public List<SuggestResult> suggest(String keyword, String indexType) {
+        Long tenantId = com.garment.common.domain.AuthUserContext.requireTenantId();
         List<String> indexNames;
         if (indexType != null && !indexType.isBlank()) {
             indexNames = List.of(resolveIndexName(tenantId, IndexType.fromCode(indexType)));

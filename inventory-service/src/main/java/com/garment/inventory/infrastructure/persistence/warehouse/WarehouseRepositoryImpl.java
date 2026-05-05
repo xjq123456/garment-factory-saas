@@ -1,7 +1,7 @@
 package com.garment.inventory.infrastructure.persistence.warehouse;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.garment.common.domain.TenantContext;
+import com.garment.common.domain.AuthUserContext;
 import com.garment.inventory.domain.warehouse.entity.Warehouse;
 import com.garment.inventory.domain.warehouse.repository.WarehouseRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,7 @@ public class WarehouseRepositoryImpl implements WarehouseRepository {
     @Override
     public void save(Warehouse warehouse) {
         WarehouseDO DO = warehouseConverter.toDO(warehouse);
-        DO.setTenantId(TenantContext.getTenantId());
+        DO.setTenantId(AuthUserContext.getTenantId());
         warehouseMapper.insert(DO);
         warehouse.setId(DO.getId());
     }
@@ -44,7 +44,7 @@ public class WarehouseRepositoryImpl implements WarehouseRepository {
     @Override
     public Optional<Warehouse> findByCode(String code) {
         LambdaQueryWrapper<WarehouseDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(WarehouseDO::getTenantId, TenantContext.getTenantId())
+        wrapper.eq(WarehouseDO::getTenantId, AuthUserContext.getTenantId())
                 .eq(WarehouseDO::getWarehouseCode, code);
         WarehouseDO DO = warehouseMapper.selectOne(wrapper);
         return Optional.ofNullable(DO).map(warehouseConverter::toEntity);
@@ -53,7 +53,7 @@ public class WarehouseRepositoryImpl implements WarehouseRepository {
     @Override
     public List<Warehouse> findAll() {
         LambdaQueryWrapper<WarehouseDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(WarehouseDO::getTenantId, TenantContext.getTenantId());
+        wrapper.eq(WarehouseDO::getTenantId, AuthUserContext.getTenantId());
         List<WarehouseDO> list = warehouseMapper.selectList(wrapper);
         return list.stream().map(warehouseConverter::toEntity).collect(Collectors.toList());
     }
@@ -61,7 +61,7 @@ public class WarehouseRepositoryImpl implements WarehouseRepository {
     @Override
     public List<Warehouse> findByType(int type) {
         LambdaQueryWrapper<WarehouseDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(WarehouseDO::getTenantId, TenantContext.getTenantId())
+        wrapper.eq(WarehouseDO::getTenantId, AuthUserContext.getTenantId())
                 .eq(WarehouseDO::getWarehouseType, type);
         List<WarehouseDO> list = warehouseMapper.selectList(wrapper);
         return list.stream().map(warehouseConverter::toEntity).collect(Collectors.toList());

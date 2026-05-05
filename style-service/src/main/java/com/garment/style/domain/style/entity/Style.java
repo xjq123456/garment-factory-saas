@@ -1,17 +1,15 @@
 package com.garment.style.domain.style.entity;
 
 import com.garment.common.domain.AggregateRoot;
+import com.garment.common.domain.DomainEvent;
 import com.garment.style.domain.style.event.StyleCreatedEvent;
-import com.garment.style.domain.style.event.StylePublishedEvent;
-import com.garment.style.domain.style.event.StyleUpdatedEvent;
 import com.garment.style.domain.style.event.StyleStatusChangedEvent;
+import com.garment.style.domain.style.event.StyleUpdatedEvent;
 import lombok.Getter;
 
 @Getter
 public class Style extends AggregateRoot {
 
-    private Long id;
-    private Long tenantId;
     private String styleCode;
     private String styleName;
     private Long categoryId;
@@ -27,10 +25,14 @@ public class Style extends AggregateRoot {
     /** 0=草稿 1=已发布 2=已停用 */
     private Integer status;
     private String remark;
-    private Integer version;
 
     private Style() {}
 
+    /**
+     * 创建款式（工厂方法）。
+     * <p>
+     * 注意：此方法不产生领域事件，由应用层负责创建并发布 {@link StyleCreatedEvent}。
+     */
     public static Style create(Long tenantId, String styleCode, String styleName,
                                Long categoryId, String season, String year,
                                String patternType, String craftDesc,
@@ -52,11 +54,10 @@ public class Style extends AggregateRoot {
         s.status = 0;
         s.remark = remark;
         s.version = 1;
-        s.registerEvent(new StyleCreatedEvent(tenantId, styleCode, styleName));
         return s;
     }
 
-    public void update(String styleName, Long categoryId, String season, String year,
+    public DomainEvent update(String styleName, Long categoryId, String season, String year,
                        String patternType, String craftDesc, String designSketch,
                        String mainImage, String images, String tags, String remark) {
         this.styleName = styleName;
@@ -71,20 +72,30 @@ public class Style extends AggregateRoot {
         this.tags = tags;
         this.remark = remark;
         this.version++;
-        this.registerEvent(new StyleUpdatedEvent(this.tenantId, this.id, this.styleCode));
+        return new StyleUpdatedEvent(this.tenantId, this.id, this.styleCode);
     }
 
-    public void publish() {
+    public DomainEvent publish() {
         this.status = 1;
-        this.registerEvent(new StyleStatusChangedEvent(this.tenantId, this.id, this.styleCode, 1));
+        return new StyleStatusChangedEvent(this.tenantId, this.id, this.styleCode, 1);
     }
 
-    public void deactivate() {
+    public DomainEvent deactivate() {
         this.status = 2;
-        this.registerEvent(new StyleStatusChangedEvent(this.tenantId, this.id, this.styleCode, 2));
+        return new StyleStatusChangedEvent(this.tenantId, this.id, this.styleCode, 2);
     }
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    /** 仅供基础设施层从数据库还原时使用，业务代码不应调用 */
+    public void overrideStatus(Integer status) {
+        this.status = status;
+    }
+
+    /** 仅供基础设施层从数据库还原时使用，业务代码不应调用 */
+    public void overrideVersion(Integer version) {
+        this.version = version;
     }
 }

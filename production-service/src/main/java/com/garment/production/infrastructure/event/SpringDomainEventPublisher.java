@@ -19,7 +19,7 @@ public class SpringDomainEventPublisher {
     private final ApplicationEventPublisher eventPublisher;
 
     public void publish(DomainEvent event) {
-        log.info("发布领域事件: eventType={}, eventId={}", event.getEventType(), event.getEventId());
+        log.info("发布领域事件: source={}, eventId={}", event.getSource(), event.getEventId());
         eventPublisher.publishEvent(event);
     }
 }

@@ -9,7 +9,7 @@ import java.util.UUID;
  * 退款单号值对象。
  */
 @Getter
-public class RefundNo implements ValueObject {
+public class RefundNo extends ValueObject {
 
     private final String value;
 

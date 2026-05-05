@@ -6,6 +6,7 @@ import com.garment.common.domain.DomainEvent;
 import com.garment.style.application.category.dto.CreateCategoryCommand;
 import com.garment.style.application.category.dto.UpdateCategoryCommand;
 import com.garment.style.domain.category.entity.Category;
+import com.garment.style.domain.category.event.CategoryCreatedEvent;
 import com.garment.style.domain.category.repository.CategoryRepository;
 import com.garment.style.infrastructure.event.DomainEventPublisher;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +31,7 @@ public class CategoryAppService {
         Category category = Category.create(tenantId, cmd.getParentId(),
                 cmd.getName(), cmd.getSortOrder(), cmd.getIcon());
         categoryRepository.save(category);
-        publishEvents(category);
+        eventPublisher.publish(new CategoryCreatedEvent(tenantId, cmd.getName()));
         return category;
     }
 
@@ -40,9 +41,9 @@ public class CategoryAppService {
         if (category == null) {
             throw new BizException("分类不存在: " + categoryId);
         }
-        category.update(cmd.getName(), cmd.getParentId(), cmd.getSortOrder(), cmd.getIcon());
+        DomainEvent event = category.update(cmd.getName(), cmd.getParentId(), cmd.getSortOrder(), cmd.getIcon());
         categoryRepository.update(category);
-        publishEvents(category);
+        eventPublisher.publish(event);
         return category;
     }
 
@@ -88,10 +89,5 @@ public class CategoryAppService {
         if (category == null) throw new BizException("分类不存在: " + categoryId);
         category.disable();
         categoryRepository.update(category);
-    }
-
-    private void publishEvents(Category category) {
-        List<DomainEvent> events = category.pullEvents();
-        events.forEach(eventPublisher::publish);
     }
 }

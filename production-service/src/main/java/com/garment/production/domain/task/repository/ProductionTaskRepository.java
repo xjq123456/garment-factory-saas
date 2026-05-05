@@ -38,11 +38,11 @@ public interface ProductionTaskRepository {
     /**
      * 分页查询
      */
-    PageResult<ProductionTask> findPage(Long tenantId, Long orderId, Long workerId,
+    PageResult<ProductionTask> findPage(Long orderId, Long workerId,
                                          TaskStatus status, int page, int size);
 
     /**
      * 查询逾期任务
      */
-    List<ProductionTask> findOverdueTasks(Long tenantId);
+    List<ProductionTask> findOverdueTasks();
 }

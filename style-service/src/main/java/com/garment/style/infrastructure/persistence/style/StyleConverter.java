@@ -39,17 +39,8 @@ public final class StyleConverter {
                 d.getMainImage(), d.getImages(), d.getTags(), d.getRemark()
         );
         style.setId(d.getId());
-        // Override status from default DRAFT(0) to actual DB value
-        try {
-            java.lang.reflect.Field statusField = Style.class.getDeclaredField("status");
-            statusField.setAccessible(true);
-            statusField.set(style, d.getStatus() != null ? d.getStatus().getCode() : 0);
-            java.lang.reflect.Field versionField = Style.class.getDeclaredField("version");
-            versionField.setAccessible(true);
-            versionField.set(style, d.getVersion());
-        } catch (Exception e) {
-            // ignore
-        }
+        style.overrideStatus(d.getStatus() != null ? d.getStatus().getCode() : 0);
+        style.overrideVersion(d.getVersion());
         return style;
     }
 }

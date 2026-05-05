@@ -1,6 +1,6 @@
 package com.garment.production.domain.report.entity;
 
-import com.garment.common.domain.BaseEntity;
+import com.garment.common.domain.BaseDomainEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-public class ProductionReport extends BaseEntity {
+public class ProductionReport extends BaseDomainEntity {
 
     /** 主键ID */
     private Long id;

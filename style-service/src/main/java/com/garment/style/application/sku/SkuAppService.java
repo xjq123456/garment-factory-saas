@@ -6,6 +6,7 @@ import com.garment.common.domain.DomainEvent;
 import com.garment.style.application.sku.dto.CreateSkuCommand;
 import com.garment.style.application.sku.dto.UpdateSkuCommand;
 import com.garment.style.domain.sku.entity.Sku;
+import com.garment.style.domain.sku.event.SkuCreatedEvent;
 import com.garment.style.domain.sku.repository.SkuRepository;
 import com.garment.style.infrastructure.event.DomainEventPublisher;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +32,7 @@ public class SkuAppService {
                 cmd.getColor(), cmd.getColorCode(), cmd.getSize(), cmd.getSizeType(),
                 cmd.getBarcode(), cmd.getWeight(), cmd.getExtraPrice());
         skuRepository.save(sku);
-        publishEvents(sku);
+        eventPublisher.publish(new SkuCreatedEvent(tenantId, cmd.getStyleId(), cmd.getSkuCode()));
         return sku;
     }
 
@@ -39,10 +40,10 @@ public class SkuAppService {
     public Sku updateSku(Long skuId, UpdateSkuCommand cmd) {
         Sku sku = skuRepository.findById(skuId);
         if (sku == null) throw new BizException("SKU不存在: " + skuId);
-        sku.update(cmd.getColor(), cmd.getColorCode(), cmd.getSize(), cmd.getSizeType(),
+        DomainEvent event = sku.update(cmd.getColor(), cmd.getColorCode(), cmd.getSize(), cmd.getSizeType(),
                 cmd.getBarcode(), cmd.getWeight(), cmd.getExtraPrice());
         skuRepository.update(sku);
-        publishEvents(sku);
+        eventPublisher.publish(event);
         return sku;
     }
 
@@ -79,10 +80,5 @@ public class SkuAppService {
         if (sku == null) throw new BizException("SKU不存在: " + skuId);
         sku.disable();
         skuRepository.update(sku);
-    }
-
-    private void publishEvents(Sku sku) {
-        List<DomainEvent> events = sku.pullEvents();
-        events.forEach(eventPublisher::publish);
     }
 }

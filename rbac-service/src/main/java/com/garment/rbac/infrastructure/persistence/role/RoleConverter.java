@@ -25,7 +25,7 @@ public final class RoleConverter {
         d.setUpdateBy(role.getUpdateBy());
         d.setCreateTime(role.getCreateTime());
         d.setUpdateTime(role.getUpdateTime());
-        d.setIsDeleted(role.getIsDeleted());
+        d.setIsDeleted(role.getDeleted());
         return d;
     }
 
@@ -46,7 +46,7 @@ public final class RoleConverter {
         role.setUpdateBy(d.getUpdateBy());
         role.setCreateTime(d.getCreateTime());
         role.setUpdateTime(d.getUpdateTime());
-        role.setIsDeleted(d.getIsDeleted());
+        role.setDeleted(d.getIsDeleted());
         return role;
     }
 }

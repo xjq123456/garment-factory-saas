@@ -1,7 +1,7 @@
 package com.garment.inventory.infrastructure.persistence.stocklog;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.garment.common.domain.TenantContext;
+import com.garment.common.domain.AuthUserContext;
 import com.garment.inventory.domain.stocklog.entity.StockLog;
 import com.garment.inventory.domain.stocklog.repository.StockLogRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +23,7 @@ public class StockLogRepositoryImpl implements StockLogRepository {
     @Override
     public void save(StockLog stockLog) {
         StockLogDO DO = stockLogConverter.toDO(stockLog);
-        DO.setTenantId(TenantContext.getTenantId());
+        DO.setTenantId(AuthUserContext.getTenantId());
         stockLogMapper.insert(DO);
     }
 
@@ -37,7 +37,7 @@ public class StockLogRepositoryImpl implements StockLogRepository {
     @Override
     public List<StockLog> findBySkuId(Long skuId) {
         LambdaQueryWrapper<StockLogDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(StockLogDO::getTenantId, TenantContext.getTenantId())
+        wrapper.eq(StockLogDO::getTenantId, AuthUserContext.getTenantId())
                 .eq(StockLogDO::getSkuId, skuId)
                 .orderByDesc(StockLogDO::getCreateTime);
         List<StockLogDO> list = stockLogMapper.selectList(wrapper);
@@ -47,7 +47,7 @@ public class StockLogRepositoryImpl implements StockLogRepository {
     @Override
     public List<StockLog> findByWarehouseIdAndSkuId(Long warehouseId, Long skuId) {
         LambdaQueryWrapper<StockLogDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(StockLogDO::getTenantId, TenantContext.getTenantId())
+        wrapper.eq(StockLogDO::getTenantId, AuthUserContext.getTenantId())
                 .eq(StockLogDO::getWarehouseId, warehouseId)
                 .eq(StockLogDO::getSkuId, skuId)
                 .orderByDesc(StockLogDO::getCreateTime);
@@ -58,7 +58,7 @@ public class StockLogRepositoryImpl implements StockLogRepository {
     @Override
     public List<StockLog> findByBizNo(String bizNo) {
         LambdaQueryWrapper<StockLogDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(StockLogDO::getTenantId, TenantContext.getTenantId())
+        wrapper.eq(StockLogDO::getTenantId, AuthUserContext.getTenantId())
                 .eq(StockLogDO::getBizNo, bizNo)
                 .orderByDesc(StockLogDO::getCreateTime);
         List<StockLogDO> list = stockLogMapper.selectList(wrapper);

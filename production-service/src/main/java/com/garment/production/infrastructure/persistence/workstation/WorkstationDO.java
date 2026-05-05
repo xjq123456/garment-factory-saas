@@ -28,9 +28,9 @@ public class WorkstationDO {
     private String equipmentCode;
     private String status;
     private String remark;
-    private String createBy;
+    private Long createBy;
     private LocalDateTime createTime;
-    private String updateBy;
+    private Long updateBy;
     private LocalDateTime updateTime;
     private Integer deleted;
     @Version

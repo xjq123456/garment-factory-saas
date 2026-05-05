@@ -1,14 +1,15 @@
 package com.garment.user.application.identity;
 
 import com.garment.common.domain.BizException;
+import com.garment.common.domain.DomainEvent;
 import com.garment.common.domain.JwtUtils;
 import com.garment.user.application.identity.dto.LoginCommand;
 import com.garment.user.application.identity.dto.RegisterCommand;
 import com.garment.user.domain.identity.entity.User;
-import com.garment.user.domain.identity.event.UserRegisteredEvent;
 import com.garment.user.domain.identity.repository.UserRepository;
 import com.garment.user.domain.identity.vo.Email;
 import com.garment.user.domain.identity.vo.Phone;
+import com.garment.user.infrastructure.event.DomainEventPublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ public class UserAppService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
+    private final DomainEventPublisher eventPublisher;
 
     /**
      * 用户注册
@@ -65,10 +67,10 @@ public class UserAppService {
         // 6. 持久化
         User savedUser = userRepository.save(user);
 
-        // 7. 发布领域事件（同步方式，后续可改为异步）
-        savedUser.pullEvents().forEach(event -> {
-            // TODO: 接入 Spring EventPublisher 或消息队列发布事件
-        });
+        // 7. 发布领域事件
+        String registerType = phone != null ? "PHONE" : "EMAIL";
+        DomainEvent event = savedUser.registeredEvent(registerType);
+        eventPublisher.publish(event);
 
         return savedUser;
     }

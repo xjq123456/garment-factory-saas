@@ -35,7 +35,7 @@ public class RefundDTO {
         dto.setTenantId(r.getTenantId());
         dto.setRefundNo(r.getRefundNo() != null ? r.getRefundNo().getValue() : null);
         dto.setPaymentId(r.getPaymentId());
-        dto.setPaymentNo(r.getPaymentNo() != null ? r.getPaymentNo().getValue() : null);
+        dto.setPaymentNo(r.getPaymentNo());
         dto.setOrderId(r.getOrderId());
         dto.setOrderNo(r.getOrderNo());
         dto.setRefundAmount(r.getRefundAmount());

@@ -29,13 +29,7 @@ public final class BomConverter {
         Bom bom = Bom.create(d.getTenantId(), d.getStyleId(), d.getBomCode(),
                 d.getBomName(), d.getVersionNo(), d.getRemark());
         bom.setId(d.getId());
-        try {
-            java.lang.reflect.Field statusField = Bom.class.getDeclaredField("status");
-            statusField.setAccessible(true);
-            statusField.set(bom, d.getStatus());
-        } catch (Exception e) {
-            // ignore
-        }
+        bom.overrideStatus(d.getStatus());
         return bom;
     }
 

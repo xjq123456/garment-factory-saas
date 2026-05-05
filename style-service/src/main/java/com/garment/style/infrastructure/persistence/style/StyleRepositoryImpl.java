@@ -10,6 +10,11 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * 款式仓储实现。
+ * <p>
+ * 多租户隔离由 TenantLineInnerInterceptor 在 SQL 层自动追加 tenant_id 条件。
+ */
 @Repository
 @RequiredArgsConstructor
 public class StyleRepositoryImpl implements StyleRepository {
@@ -33,47 +38,41 @@ public class StyleRepositoryImpl implements StyleRepository {
     }
 
     @Override
-    public void deleteById(Long id, Long tenantId) {
-        LambdaQueryWrapper<StyleDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(StyleDO::getId, id).eq(StyleDO::getTenantId, tenantId);
-        styleMapper.delete(wrapper);
+    public void deleteById(Long id) {
+        styleMapper.deleteById(id);
     }
 
     @Override
-    public Style findById(Long id, Long tenantId) {
+    public Style findById(Long id) {
+        return StyleConverter.toDomain(styleMapper.selectById(id));
+    }
+
+    @Override
+    public Style findByCode(String styleCode) {
         LambdaQueryWrapper<StyleDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(StyleDO::getId, id).eq(StyleDO::getTenantId, tenantId);
+        wrapper.eq(StyleDO::getStyleCode, styleCode);
         return StyleConverter.toDomain(styleMapper.selectOne(wrapper));
     }
 
     @Override
-    public Style findByCode(String styleCode, Long tenantId) {
+    public List<Style> findAll() {
         LambdaQueryWrapper<StyleDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(StyleDO::getStyleCode, styleCode).eq(StyleDO::getTenantId, tenantId);
-        return StyleConverter.toDomain(styleMapper.selectOne(wrapper));
-    }
-
-    @Override
-    public List<Style> findByTenantId(Long tenantId) {
-        LambdaQueryWrapper<StyleDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(StyleDO::getTenantId, tenantId).orderByDesc(StyleDO::getCreatedAt);
+        wrapper.orderByDesc(StyleDO::getCreatedAt);
         return styleMapper.selectList(wrapper).stream().map(StyleConverter::toDomain).toList();
     }
 
     @Override
-    public List<Style> findByCategoryId(Long categoryId, Long tenantId) {
+    public List<Style> findByCategoryId(Long categoryId) {
         LambdaQueryWrapper<StyleDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(StyleDO::getTenantId, tenantId)
-               .eq(StyleDO::getCategoryId, categoryId)
+        wrapper.eq(StyleDO::getCategoryId, categoryId)
                .orderByDesc(StyleDO::getCreatedAt);
         return styleMapper.selectList(wrapper).stream().map(StyleConverter::toDomain).toList();
     }
 
     @Override
-    public PageResult<Style> pageQuery(Long tenantId, String keyword, Long categoryId,
+    public PageResult<Style> pageQuery(String keyword, Long categoryId,
                                         String season, Integer status, int page, int size) {
         LambdaQueryWrapper<StyleDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(StyleDO::getTenantId, tenantId);
         if (keyword != null && !keyword.isEmpty()) {
             wrapper.and(w -> w.like(StyleDO::getStyleName, keyword)
                               .or().like(StyleDO::getStyleCode, keyword));
@@ -90,9 +89,9 @@ public class StyleRepositoryImpl implements StyleRepository {
     }
 
     @Override
-    public boolean existsByStyleCode(String styleCode, Long tenantId) {
+    public boolean existsByStyleCode(String styleCode) {
         LambdaQueryWrapper<StyleDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(StyleDO::getStyleCode, styleCode).eq(StyleDO::getTenantId, tenantId);
+        wrapper.eq(StyleDO::getStyleCode, styleCode);
         return styleMapper.selectCount(wrapper) > 0;
     }
 }

@@ -43,17 +43,32 @@ public abstract class BaseEntity implements Serializable {
 
     /** 创建时间 */
     @TableField(value = "created_at", fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
+    private LocalDateTime createTime;
 
     /** 创建人 */
     @TableField(value = "created_by", fill = FieldFill.INSERT)
-    private Long createdBy;
+    private Long createBy;
 
     /** 最后更新时间 */
     @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updatedAt;
+    private LocalDateTime updateTime;
 
     /** 最后更新人 */
     @TableField(value = "updated_by", fill = FieldFill.INSERT_UPDATE)
-    private Long updatedBy;
+    private Long updateBy;
+
+    // ==================== 兼容别名方法 ====================
+    // 部分服务使用 createdAt/createdBy 命名，提供兼容访问器
+
+    public LocalDateTime getCreatedAt() { return createTime; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createTime = createdAt; }
+
+    public Long getCreatedBy() { return createBy; }
+    public void setCreatedBy(Long createdBy) { this.createBy = createdBy; }
+
+    public LocalDateTime getUpdatedAt() { return updateTime; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updateTime = updatedAt; }
+
+    public Long getUpdatedBy() { return updateBy; }
+    public void setUpdatedBy(Long updatedBy) { this.updateBy = updatedBy; }
 }

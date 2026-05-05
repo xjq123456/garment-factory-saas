@@ -16,6 +16,16 @@ import java.time.LocalDateTime;
 public class MaterialStockLog extends ValueObject {
 
     /**
+     * 主键ID
+     */
+    private Long id;
+
+    /**
+     * 租户ID
+     */
+    private Long tenantId;
+
+    /**
      * 仓库ID
      */
     private Long warehouseId;

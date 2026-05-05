@@ -3,7 +3,7 @@ package com.garment.marketing.application.customer;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.garment.common.domain.BizException;
-import com.garment.common.domain.TenantContext;
+import com.garment.common.domain.AuthUserContext;
 import com.garment.common.interfaces.PageResult;
 import com.garment.marketing.application.customer.dto.CreateCustomerCommand;
 import com.garment.marketing.application.customer.dto.CustomerQuery;

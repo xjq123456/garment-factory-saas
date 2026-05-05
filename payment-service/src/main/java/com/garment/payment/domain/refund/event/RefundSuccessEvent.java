@@ -20,7 +20,7 @@ public class RefundSuccessEvent extends DomainEvent {
 
     public RefundSuccessEvent(Long refundId, String refundNo, Long paymentId,
                               String paymentNo, Long orderId, BigDecimal refundAmount) {
-        super("payment-service");
+        super();
         this.refundId = refundId;
         this.refundNo = refundNo;
         this.paymentId = paymentId;

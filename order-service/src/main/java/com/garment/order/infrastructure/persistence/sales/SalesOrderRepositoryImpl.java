@@ -80,7 +80,7 @@ public class SalesOrderRepositoryImpl implements SalesOrderRepository {
         List<SalesOrder> orders = page.getRecords().stream()
                 .map(SalesOrderConverter::toDomain)
                 .collect(Collectors.toList());
-        return new PageResult<>(orders, page.getTotal());
+        return new PageResult<>(orders, page.getTotal(), pageNum, pageSize);
     }
 
     @Override

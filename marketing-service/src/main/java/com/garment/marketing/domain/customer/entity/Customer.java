@@ -1,10 +1,7 @@
 package com.garment.marketing.domain.customer.entity;
 
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
+import com.garment.common.domain.BaseDomainEntity;
 import com.garment.common.domain.BizException;
-import com.garment.common.infrastructure.BaseEntity;
 import com.garment.marketing.domain.customer.vo.CustomerLevel;
 import com.garment.marketing.domain.customer.vo.CustomerType;
 import lombok.Data;
@@ -18,8 +15,7 @@ import java.time.LocalDateTime;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TableName(value = "mk_customer", autoResultMap = true)
-public class Customer extends BaseEntity {
+public class Customer extends BaseDomainEntity {
 
     /** 客户名称 */
     private String name;
@@ -37,11 +33,9 @@ public class Customer extends BaseEntity {
     private String address;
 
     /** 客户类型 */
-    @TableField(typeHandler = JacksonTypeHandler.class)
     private CustomerType type;
 
     /** 客户等级 */
-    @TableField(typeHandler = JacksonTypeHandler.class)
     private CustomerLevel level;
 
     /** 客户来源 */

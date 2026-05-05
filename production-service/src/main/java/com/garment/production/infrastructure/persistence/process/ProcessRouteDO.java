@@ -23,9 +23,9 @@ public class ProcessRouteDO {
     private Long styleId;
     private String description;
     private String status;
-    private String createBy;
+    private Long createBy;
     private LocalDateTime createTime;
-    private String updateBy;
+    private Long updateBy;
     private LocalDateTime updateTime;
     private Integer deleted;
     @Version

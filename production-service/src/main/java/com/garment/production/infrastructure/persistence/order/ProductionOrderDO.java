@@ -20,6 +20,7 @@ public class ProductionOrderDO {
     private Long id;
     private Long tenantId;
     private String orderNo;
+    private Long routeId;
     private Long styleId;
     private String styleCode;
     private String styleName;
@@ -36,9 +37,9 @@ public class ProductionOrderDO {
     private Integer priority;
     private String status;
     private String remark;
-    private String createBy;
+    private Long createBy;
     private LocalDateTime createTime;
-    private String updateBy;
+    private Long updateBy;
     private LocalDateTime updateTime;
     private Integer deleted;
     @Version

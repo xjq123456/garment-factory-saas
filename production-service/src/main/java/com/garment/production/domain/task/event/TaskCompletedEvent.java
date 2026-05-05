@@ -18,7 +18,7 @@ public class TaskCompletedEvent extends DomainEvent {
 
     public TaskCompletedEvent(Long taskId, String taskNo, Long orderId,
                               Long stepId, int completedQty, int defectiveQty) {
-        super("TaskCompleted");
+        super();
         this.taskId = taskId;
         this.taskNo = taskNo;
         this.orderId = orderId;

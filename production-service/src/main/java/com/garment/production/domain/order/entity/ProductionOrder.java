@@ -23,6 +23,9 @@ public class ProductionOrder extends AggregateRoot {
     /** 工单编号 */
     private String orderNo;
 
+    /** 工艺路线ID */
+    private Long routeId;
+
     /** 款式ID (关联style-service) */
     private Long styleId;
 

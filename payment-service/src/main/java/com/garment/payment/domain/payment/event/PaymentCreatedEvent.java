@@ -6,7 +6,7 @@ import lombok.Getter;
 import java.math.BigDecimal;
 
 @Getter
-public class PaymentCreatedEvent implements DomainEvent {
+public class PaymentCreatedEvent extends DomainEvent {
     private final Long paymentId;
     private final String paymentNo;
     private final Long orderId;

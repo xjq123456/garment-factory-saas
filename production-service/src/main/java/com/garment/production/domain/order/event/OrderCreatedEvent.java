@@ -15,7 +15,7 @@ public class OrderCreatedEvent extends DomainEvent {
     private final Integer totalQty;
 
     public OrderCreatedEvent(Long orderId, String orderNo, Long styleId, Integer totalQty) {
-        super("OrderCreated");
+        super();
         this.orderId = orderId;
         this.orderNo = orderNo;
         this.styleId = styleId;

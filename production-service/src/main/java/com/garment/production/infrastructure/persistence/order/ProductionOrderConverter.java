@@ -16,6 +16,7 @@ public class ProductionOrderConverter {
         DO.setId(entity.getId());
         DO.setTenantId(entity.getTenantId());
         DO.setOrderNo(entity.getOrderNo());
+        DO.setRouteId(entity.getRouteId());
         DO.setStyleId(entity.getStyleId());
         DO.setStyleCode(entity.getStyleCode());
         DO.setStyleName(entity.getStyleName());
@@ -47,6 +48,7 @@ public class ProductionOrderConverter {
         entity.setId(DO.getId());
         entity.setTenantId(DO.getTenantId());
         entity.setOrderNo(DO.getOrderNo());
+        entity.setRouteId(DO.getRouteId());
         entity.setStyleId(DO.getStyleId());
         entity.setStyleCode(DO.getStyleCode());
         entity.setStyleName(DO.getStyleName());

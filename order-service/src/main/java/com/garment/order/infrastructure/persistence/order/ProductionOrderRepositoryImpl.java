@@ -82,7 +82,7 @@ public class ProductionOrderRepositoryImpl implements ProductionOrderRepository 
         List<ProductionOrder> orders = page.getRecords().stream()
                 .map(ProductionOrderConverter::toDomain)
                 .collect(Collectors.toList());
-        return new PageResult<>(orders, page.getTotal());
+        return new PageResult<>(orders, page.getTotal(), pageNum, pageSize);
     }
 
     @Override

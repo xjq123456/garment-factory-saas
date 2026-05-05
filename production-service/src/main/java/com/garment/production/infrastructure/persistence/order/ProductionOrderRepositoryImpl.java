@@ -52,11 +52,9 @@ public class ProductionOrderRepositoryImpl implements ProductionOrderRepository 
     }
 
     @Override
-    public PageResult<ProductionOrder> findPage(Long tenantId, String keyword, OrderStatus status,
+    public PageResult<ProductionOrder> findPage(String keyword, OrderStatus status,
                                                  Integer priority, int page, int size) {
         LambdaQueryWrapper<ProductionOrderDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(ProductionOrderDO::getTenantId, tenantId);
-
         if (StringUtils.hasText(keyword)) {
             wrapper.and(w -> w
                     .like(ProductionOrderDO::getOrderNo, keyword)
@@ -84,30 +82,27 @@ public class ProductionOrderRepositoryImpl implements ProductionOrderRepository 
     }
 
     @Override
-    public List<ProductionOrder> findByStatus(Long tenantId, OrderStatus status) {
+    public List<ProductionOrder> findByStatus(OrderStatus status) {
         LambdaQueryWrapper<ProductionOrderDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(ProductionOrderDO::getTenantId, tenantId)
-                .eq(ProductionOrderDO::getStatus, status.getCode());
+        wrapper.eq(ProductionOrderDO::getStatus, status.getCode());
         return mapper.selectList(wrapper).stream()
                 .map(converter::toEntity)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<ProductionOrder> findByStyleId(Long tenantId, Long styleId) {
+    public List<ProductionOrder> findByStyleId(Long styleId) {
         LambdaQueryWrapper<ProductionOrderDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(ProductionOrderDO::getTenantId, tenantId)
-                .eq(ProductionOrderDO::getStyleId, styleId);
+        wrapper.eq(ProductionOrderDO::getStyleId, styleId);
         return mapper.selectList(wrapper).stream()
                 .map(converter::toEntity)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<ProductionOrder> findOverdueOrders(Long tenantId) {
+    public List<ProductionOrder> findOverdueOrders() {
         LambdaQueryWrapper<ProductionOrderDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(ProductionOrderDO::getTenantId, tenantId)
-                .lt(ProductionOrderDO::getDeliveryDate, LocalDate.now())
+        wrapper.lt(ProductionOrderDO::getDeliveryDate, LocalDate.now())
                 .notIn(ProductionOrderDO::getStatus,
                         OrderStatus.COMPLETED.getCode(), OrderStatus.CLOSED.getCode());
         return mapper.selectList(wrapper).stream()
@@ -116,10 +111,9 @@ public class ProductionOrderRepositoryImpl implements ProductionOrderRepository 
     }
 
     @Override
-    public long countByStatus(Long tenantId, OrderStatus status) {
+    public long countByStatus(OrderStatus status) {
         LambdaQueryWrapper<ProductionOrderDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(ProductionOrderDO::getTenantId, tenantId)
-                .eq(ProductionOrderDO::getStatus, status.getCode());
+        wrapper.eq(ProductionOrderDO::getStatus, status.getCode());
         return mapper.selectCount(wrapper);
     }
 }

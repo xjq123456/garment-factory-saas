@@ -21,7 +21,7 @@ public final class RefundConverter {
         d.setTenantId(domain.getTenantId());
         d.setRefundNo(domain.getRefundNo() != null ? domain.getRefundNo().getValue() : null);
         d.setPaymentId(domain.getPaymentId());
-        d.setPaymentNo(domain.getPaymentNo() != null ? domain.getPaymentNo().getValue() : null);
+        d.setPaymentNo(domain.getPaymentNo());
         d.setOrderId(domain.getOrderId());
         d.setOrderNo(domain.getOrderNo());
         d.setRefundAmount(domain.getRefundAmount());
@@ -44,7 +44,7 @@ public final class RefundConverter {
         domain.setTenantId(d.getTenantId());
         domain.setRefundNo(d.getRefundNo() != null ? RefundNo.of(d.getRefundNo()) : null);
         domain.setPaymentId(d.getPaymentId());
-        domain.setPaymentNo(d.getPaymentNo() != null ? PaymentNo.of(d.getPaymentNo()) : null);
+        domain.setPaymentNo(d.getPaymentNo());
         domain.setOrderId(d.getOrderId());
         domain.setOrderNo(d.getOrderNo());
         domain.setRefundAmount(d.getRefundAmount());

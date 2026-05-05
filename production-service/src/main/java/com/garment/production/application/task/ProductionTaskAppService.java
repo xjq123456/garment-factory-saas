@@ -1,7 +1,6 @@
 package com.garment.production.application.task;
 
 import com.garment.common.domain.BizException;
-import com.garment.common.domain.TenantContext;
 import com.garment.common.interfaces.PageResult;
 import com.garment.production.application.task.dto.*;
 import com.garment.production.domain.order.entity.ProductionOrder;
@@ -43,8 +42,6 @@ public class ProductionTaskAppService {
      */
     @Transactional
     public ProductionTaskVO createTask(CreateTaskCommand cmd) {
-        Long tenantId = TenantContext.getTenantId();
-
         ProductionOrder order = orderRepository.findById(cmd.getOrderId())
                 .orElseThrow(() -> new BizException("工单不存在: " + cmd.getOrderId()));
 
@@ -52,7 +49,6 @@ public class ProductionTaskAppService {
         ProductionTask task = ProductionTask.create(
                 taskNo, cmd.getOrderId(), cmd.getStepId(), cmd.getStepName(), cmd.getPlanQty()
         );
-        task.setTenantId(tenantId);
         task.setRouteId(cmd.getRouteId());
         task.setPlanStartTime(cmd.getPlanStartTime());
         task.setPlanEndTime(cmd.getPlanEndTime());
@@ -128,8 +124,6 @@ public class ProductionTaskAppService {
      */
     @Transactional
     public ProductionTaskVO reportWork(ReportWorkCommand cmd) {
-        Long tenantId = TenantContext.getTenantId();
-
         ProductionTask task = getTaskOrThrow(cmd.getTaskId());
 
         // 校验报工数据
@@ -149,7 +143,6 @@ public class ProductionTaskAppService {
                 generateReportNo(), task.getOrderId(), task.getId(),
                 task.getWorkerId(), task.getWorkerName()
         );
-        report.setTenantId(tenantId);
         report.setStationId(cmd.getStationId() != null ? cmd.getStationId() : task.getStationId());
         report.submit(cmd.getReportQty(), cmd.getQualifiedQty(), cmd.getDefectiveQty());
         report.setWorkHours(cmd.getWorkHours());
@@ -234,9 +227,8 @@ public class ProductionTaskAppService {
      */
     public PageResult<ProductionTaskVO> findTasks(Long orderId, Long workerId,
                                                    TaskStatus status, int page, int size) {
-        Long tenantId = TenantContext.getTenantId();
         PageResult<ProductionTask> pageResult = taskRepository.findPage(
-                tenantId, orderId, workerId, status, page, size);
+                orderId, workerId, status, page, size);
 
         List<ProductionTaskVO> voList = pageResult.getRecords().stream()
                 .map(this::toVO)
@@ -249,8 +241,7 @@ public class ProductionTaskAppService {
      * 查询逾期任务
      */
     public List<ProductionTaskVO> findOverdueTasks() {
-        Long tenantId = TenantContext.getTenantId();
-        return taskRepository.findOverdueTasks(tenantId).stream()
+        return taskRepository.findOverdueTasks().stream()
                 .map(this::toVO)
                 .collect(Collectors.toList());
     }

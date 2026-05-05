@@ -1,19 +1,18 @@
 package com.garment.payment.application.payment;
 
 import com.garment.common.domain.BizException;
-import com.garment.common.domain.TenantContext;
+import com.garment.common.domain.AuthUserContext;
+import com.garment.common.domain.DomainEvent;
 import com.garment.payment.application.payment.dto.CreatePaymentCommand;
 import com.garment.payment.application.payment.dto.PaymentDTO;
 import com.garment.payment.domain.payment.entity.Payment;
+import com.garment.payment.domain.payment.event.PaymentCreatedEvent;
 import com.garment.payment.domain.payment.repository.PaymentRepository;
 import com.garment.payment.domain.shared.vo.PayMethod;
-import com.garment.payment.domain.shared.vo.PaymentNo;
-import com.garment.payment.domain.shared.vo.PaymentStatus;
+import com.garment.payment.infrastructure.event.DomainEventPublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
 
 /**
  * 支付应用服务。
@@ -23,28 +22,28 @@ import java.time.LocalDateTime;
 public class PaymentAppService {
 
     private final PaymentRepository paymentRepository;
+    private final DomainEventPublisher eventPublisher;
 
     /**
      * 创建支付单。
      */
     @Transactional
     public PaymentDTO createPayment(CreatePaymentCommand cmd) {
-        Payment payment = new Payment();
-        payment.setTenantId(TenantContext.getTenantId());
-        payment.setPaymentNo(PaymentNo.generate());
-        payment.setOrderId(cmd.getOrderId());
-        payment.setOrderNo(cmd.getOrderNo());
-        payment.setPayerId(cmd.getPayerId());
-        payment.setPayeeId(cmd.getPayeeId());
-        payment.setAmount(cmd.getAmount());
-        payment.setCurrency(cmd.getCurrency());
-        payment.setPayMethod(PayMethod.valueOf(cmd.getPayMethod()));
-        payment.setStatus(PaymentStatus.PENDING);
-        payment.setChannel(cmd.getChannel());
-        payment.setRemark(cmd.getRemark());
-        payment.setExpireAt(LocalDateTime.now().plusMinutes(30));
+        Payment payment = Payment.create(
+                AuthUserContext.requireTenantId(),
+                cmd.getOrderId(),
+                cmd.getOrderNo(),
+                cmd.getPayerId(),
+                cmd.getPayeeId(),
+                cmd.getAmount(),
+                PayMethod.valueOf(cmd.getPayMethod()),
+                cmd.getChannel(),
+                cmd.getRemark()
+        );
 
         Payment saved = paymentRepository.save(payment);
+        eventPublisher.publish(new PaymentCreatedEvent(saved.getId(), saved.getPaymentNo().getValue(),
+                saved.getOrderId(), saved.getOrderNo(), saved.getPayerId(), saved.getAmount()));
         return PaymentDTO.from(saved);
     }
 
@@ -85,8 +84,9 @@ public class PaymentAppService {
     public PaymentDTO paySuccess(String paymentNo, String channelTradeNo) {
         Payment payment = paymentRepository.findByPaymentNo(paymentNo)
                 .orElseThrow(() -> new BizException("支付单不存在: " + paymentNo));
-        payment.paySuccess(channelTradeNo);
+        DomainEvent event = payment.markSuccess(channelTradeNo);
         Payment saved = paymentRepository.save(payment);
+        eventPublisher.publish(event);
         return PaymentDTO.from(saved);
     }
 
@@ -97,7 +97,7 @@ public class PaymentAppService {
     public PaymentDTO payFailed(String paymentNo) {
         Payment payment = paymentRepository.findByPaymentNo(paymentNo)
                 .orElseThrow(() -> new BizException("支付单不存在: " + paymentNo));
-        payment.payFailed();
+        payment.markFailed("支付回调失败");
         Payment saved = paymentRepository.save(payment);
         return PaymentDTO.from(saved);
     }

@@ -2,10 +2,12 @@ package com.garment.payment.domain.refund.entity;
 
 import com.garment.common.domain.AggregateRoot;
 import com.garment.common.domain.BizException;
+import com.garment.common.domain.DomainEvent;
 import com.garment.payment.domain.refund.event.RefundCreatedEvent;
 import com.garment.payment.domain.refund.event.RefundSuccessEvent;
 import com.garment.payment.domain.shared.vo.RefundNo;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -14,10 +16,9 @@ import java.time.LocalDateTime;
  * 退款单聚合根。
  */
 @Getter
+@Setter
 public class Refund extends AggregateRoot {
 
-    private Long id;
-    private Long tenantId;
     private RefundNo refundNo;
     private Long paymentId;
     private String paymentNo;
@@ -30,18 +31,18 @@ public class Refund extends AggregateRoot {
     private LocalDateTime refundedAt;
     private Long operatorId;
     private String remark;
-    private Integer version;
 
-    protected Refund() {}
+    public Refund() {}
 
     /**
      * 创建退款单（工厂方法）。
+     * <p>
+     * 返回 {@link RefundCreatedEvent}，由应用层负责发布。
      */
     public static Refund create(Long tenantId, Long paymentId, String paymentNo,
                                 Long orderId, String orderNo, BigDecimal refundAmount,
                                 String reason, Long operatorId) {
         Refund r = new Refund();
-        r.id = nextId();
         r.tenantId = tenantId;
         r.refundNo = RefundNo.generate();
         r.paymentId = paymentId;
@@ -54,23 +55,21 @@ public class Refund extends AggregateRoot {
         r.operatorId = operatorId;
         r.version = 0;
 
-        r.addEvent(new RefundCreatedEvent(r.id, r.refundNo.getValue(), r.paymentId,
-                r.paymentNo, r.orderId, r.refundAmount));
         return r;
     }
 
     /**
-     * 标记退款成功。
+     * 标记退款成功，返回领域事件。
      */
-    public void markSuccess(String channelRefundNo) {
+    public DomainEvent markSuccess(String channelRefundNo) {
         if (this.status != RefundStatus.PENDING && this.status != RefundStatus.PROCESSING) {
             throw new BizException("当前状态不允许标记为退款成功");
         }
         this.status = RefundStatus.SUCCESS;
         this.channelRefundNo = channelRefundNo;
         this.refundedAt = LocalDateTime.now();
-        this.addEvent(new RefundSuccessEvent(this.id, this.refundNo.getValue(),
-                this.paymentId, this.paymentNo, this.orderId, this.refundAmount));
+        return new RefundSuccessEvent(this.id, this.refundNo.getValue(),
+                this.paymentId, this.paymentNo, this.orderId, this.refundAmount);
     }
 
     /**

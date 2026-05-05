@@ -1,6 +1,7 @@
 package com.garment.order.domain.order.entity;
 
 import com.garment.common.domain.AggregateRoot;
+import com.garment.common.domain.DomainEvent;
 import com.garment.order.domain.order.event.OrderConfirmedEvent;
 import com.garment.order.domain.order.vo.OrderStatus;
 import lombok.Getter;
@@ -33,19 +34,24 @@ public class ProductionOrder extends AggregateRoot {
     private List<ProductionOrderItem> items = new ArrayList<>();
 
     public ProductionOrder(Long id, Long tenantId, String orderNo) {
-        super(id, tenantId);
+        super();
+        this.setId(id);
+        this.setTenantId(tenantId);
         this.orderNo = orderNo;
         this.status = OrderStatus.DRAFT;
         this.unit = "件";
         this.totalQuantity = BigDecimal.ZERO;
     }
 
-    public void confirm() {
+    /**
+     * 确认加工单，返回领域事件。
+     */
+    public DomainEvent confirm() {
         if (status != OrderStatus.DRAFT) {
             throw new IllegalStateException("只有草稿状态的加工单才能确认");
         }
         this.status = OrderStatus.CONFIRMED;
-        registerEvent(new OrderConfirmedEvent(this.getId(), this.getOrderNo(), getTenantId()));
+        return new OrderConfirmedEvent(this.getId(), this.getOrderNo(), getTenantId());
     }
 
     public void startProduction() {

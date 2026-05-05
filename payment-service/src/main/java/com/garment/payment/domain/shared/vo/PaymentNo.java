@@ -9,7 +9,7 @@ import java.util.UUID;
  * 支付单号值对象。
  */
 @Getter
-public class PaymentNo implements ValueObject {
+public class PaymentNo extends ValueObject {
 
     private final String value;
 

@@ -73,8 +73,10 @@ public class QualityInspectionRepositoryImpl implements QualityInspectionReposit
     public PageResult<QualityInspection> findPage(Long tenantId, Long orderId, InspectionType type,
                                                     InspectionResult result, int page, int size) {
         LambdaQueryWrapper<QualityInspectionDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(QualityInspectionDO::getTenantId, tenantId);
 
+        if (tenantId != null) {
+            wrapper.eq(QualityInspectionDO::getTenantId, tenantId);
+        }
         if (orderId != null) {
             wrapper.eq(QualityInspectionDO::getOrderId, orderId);
         }

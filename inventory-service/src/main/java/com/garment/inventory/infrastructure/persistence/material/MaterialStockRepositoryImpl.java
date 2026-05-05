@@ -1,7 +1,7 @@
 package com.garment.inventory.infrastructure.persistence.material;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.garment.common.domain.TenantContext;
+import com.garment.common.domain.AuthUserContext;
 import com.garment.inventory.domain.material.entity.MaterialStock;
 import com.garment.inventory.domain.material.repository.MaterialStockRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,7 @@ public class MaterialStockRepositoryImpl implements MaterialStockRepository {
     @Override
     public void save(MaterialStock stock) {
         MaterialStockDO DO = materialStockConverter.toDO(stock);
-        DO.setTenantId(TenantContext.getTenantId());
+        DO.setTenantId(AuthUserContext.getTenantId());
         materialStockMapper.insert(DO);
         stock.setId(DO.getId());
     }
@@ -44,7 +44,7 @@ public class MaterialStockRepositoryImpl implements MaterialStockRepository {
     @Override
     public Optional<MaterialStock> findByWarehouseIdAndMaterialId(Long warehouseId, Long materialId) {
         LambdaQueryWrapper<MaterialStockDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(MaterialStockDO::getTenantId, TenantContext.getTenantId())
+        wrapper.eq(MaterialStockDO::getTenantId, AuthUserContext.getTenantId())
                 .eq(MaterialStockDO::getWarehouseId, warehouseId)
                 .eq(MaterialStockDO::getMaterialId, materialId);
         MaterialStockDO DO = materialStockMapper.selectOne(wrapper);
@@ -54,7 +54,7 @@ public class MaterialStockRepositoryImpl implements MaterialStockRepository {
     @Override
     public Optional<MaterialStock> findByWarehouseIdAndMaterialIdAndBatchNo(Long warehouseId, Long materialId, String batchNo) {
         LambdaQueryWrapper<MaterialStockDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(MaterialStockDO::getTenantId, TenantContext.getTenantId())
+        wrapper.eq(MaterialStockDO::getTenantId, AuthUserContext.getTenantId())
                 .eq(MaterialStockDO::getWarehouseId, warehouseId)
                 .eq(MaterialStockDO::getMaterialId, materialId)
                 .eq(MaterialStockDO::getBatchNo, batchNo);
@@ -65,7 +65,7 @@ public class MaterialStockRepositoryImpl implements MaterialStockRepository {
     @Override
     public List<MaterialStock> findByMaterialId(Long materialId) {
         LambdaQueryWrapper<MaterialStockDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(MaterialStockDO::getTenantId, TenantContext.getTenantId())
+        wrapper.eq(MaterialStockDO::getTenantId, AuthUserContext.getTenantId())
                 .eq(MaterialStockDO::getMaterialId, materialId);
         List<MaterialStockDO> list = materialStockMapper.selectList(wrapper);
         return list.stream().map(materialStockConverter::toEntity).collect(Collectors.toList());
@@ -74,7 +74,7 @@ public class MaterialStockRepositoryImpl implements MaterialStockRepository {
     @Override
     public List<MaterialStock> findByWarehouseId(Long warehouseId) {
         LambdaQueryWrapper<MaterialStockDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(MaterialStockDO::getTenantId, TenantContext.getTenantId())
+        wrapper.eq(MaterialStockDO::getTenantId, AuthUserContext.getTenantId())
                 .eq(MaterialStockDO::getWarehouseId, warehouseId);
         List<MaterialStockDO> list = materialStockMapper.selectList(wrapper);
         return list.stream().map(materialStockConverter::toEntity).collect(Collectors.toList());
@@ -82,7 +82,7 @@ public class MaterialStockRepositoryImpl implements MaterialStockRepository {
 
     @Override
     public List<MaterialStock> findBelowSafetyStock() {
-        Long tenantId = TenantContext.getTenantId();
+        Long tenantId = AuthUserContext.getTenantId();
         List<MaterialStockDO> list = materialStockMapper.selectBelowSafetyStock(tenantId);
         return list.stream().map(materialStockConverter::toEntity).collect(Collectors.toList());
     }

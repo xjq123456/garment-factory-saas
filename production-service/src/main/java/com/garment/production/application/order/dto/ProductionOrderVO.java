@@ -15,6 +15,7 @@ public class ProductionOrderVO {
 
     private Long id;
     private String orderNo;
+    private Long routeId;
     private Long styleId;
     private String styleCode;
     private String styleName;

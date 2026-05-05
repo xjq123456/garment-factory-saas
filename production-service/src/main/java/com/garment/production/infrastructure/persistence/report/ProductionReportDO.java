@@ -30,9 +30,9 @@ public class ProductionReportDO {
     private BigDecimal workHours;
     private LocalDateTime reportTime;
     private String remark;
-    private String createBy;
+    private Long createBy;
     private LocalDateTime createTime;
-    private String updateBy;
+    private Long updateBy;
     private LocalDateTime updateTime;
     private Integer deleted;
 }

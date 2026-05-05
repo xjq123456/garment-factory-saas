@@ -1,8 +1,8 @@
 package com.garment.user.domain.identity.entity;
 
-import com.garment.common.domain.AggregateRoot;
-import com.garment.common.infrastructure.BaseEntity;
+import com.garment.common.domain.BaseDomainEntity;
 import com.garment.common.domain.BizException;
+import com.garment.common.domain.DomainEvent;
 import com.garment.user.domain.identity.event.UserRegisteredEvent;
 import com.garment.user.domain.identity.vo.Email;
 import com.garment.user.domain.identity.vo.Phone;
@@ -14,13 +14,12 @@ import lombok.EqualsAndHashCode;
  * 用户聚合根
  * <p>
  * 用户是身份域的核心聚合根，承载用户账号的全部业务逻辑。
- * 通过继承 {@link BaseEntity} 获得持久化能力（雪花主键、多租户、审计字段等），
- * 通过组合 {@link AggregateRoot} 获得领域事件管理能力。
+ * 通过继承 {@link BaseDomainEntity} 获得领域标识（id、tenantId）和审计能力。
  * </p>
  * <p>
  * 核心职责：
  * <ul>
- *   <li>用户注册（创建账号、发布注册事件）</li>
+ *   <li>用户注册（创建账号、返回注册事件）</li>
  *   <li>密码管理（加密存储、密码校验）</li>
  *   <li>账号状态管理（冻结/解冻/注销）</li>
  *   <li>登录信息更新（最后登录时间、登录IP）</li>
@@ -31,10 +30,7 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class User extends BaseEntity {
-
-    /** 聚合根事件管理（通过组合方式） */
-    private final transient AggregateRoot aggregateRoot = new AggregateRoot() {};
+public class User extends BaseDomainEntity {
 
     // ==================== 基本信息 ====================
 
@@ -79,7 +75,7 @@ public class User extends BaseEntity {
      * 2. 用户名长度 4-32 位，仅允许字母、数字、下划线
      * 3. 手机号和邮箱至少提供一种
      * 4. 设置初始状态为 ACTIVE
-     * 5. 发布 UserRegisteredEvent 领域事件
+     * 5. 返回 {@link UserRegisteredEvent} 领域事件
      * </p>
      *
      * @param username 用户名
@@ -118,13 +114,20 @@ public class User extends BaseEntity {
         user.setEmail(email);
         user.setStatus(UserStatus.ACTIVE);
 
-        // 发布注册事件
-        String registerType = phone != null ? "PHONE" : "EMAIL";
-        user.aggregateRoot.registerEvent(
-                new UserRegisteredEvent(user.getId(), username, user.getTenantId(), registerType)
-        );
-
         return user;
+    }
+
+    /**
+     * 获取用户注册领域事件。
+     * <p>
+     * 由应用层在创建用户后调用，获取注册事件并发布。
+     * </p>
+     *
+     * @param registerType 注册类型（PHONE/EMAIL）
+     * @return 注册事件
+     */
+    public DomainEvent registeredEvent(String registerType) {
+        return new UserRegisteredEvent(this.getId(), this.getUsername(), this.getTenantId(), registerType);
     }
 
     /**
@@ -237,14 +240,5 @@ public class User extends BaseEntity {
      */
     public boolean canLogin() {
         return this.status != null && this.status.canLogin();
-    }
-
-    /**
-     * 拉取并清空领域事件
-     *
-     * @return 领域事件列表
-     */
-    public java.util.List<com.garment.common.domain.DomainEvent> pullEvents() {
-        return aggregateRoot.pullEvents();
     }
 }

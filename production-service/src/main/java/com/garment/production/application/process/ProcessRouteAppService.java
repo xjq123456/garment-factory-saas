@@ -1,7 +1,6 @@
 package com.garment.production.application.process;
 
 import com.garment.common.domain.BizException;
-import com.garment.common.domain.TenantContext;
 import com.garment.production.application.process.dto.CreateProcessRouteCommand;
 import com.garment.production.application.process.dto.ProcessRouteVO;
 import com.garment.production.domain.process.entity.ProcessRoute;
@@ -31,8 +30,6 @@ public class ProcessRouteAppService {
      */
     @Transactional
     public ProcessRouteVO createRoute(CreateProcessRouteCommand cmd) {
-        Long tenantId = TenantContext.getTenantId();
-
         // 检查编号唯一性
         processRouteRepository.findByRouteCode(cmd.getRouteCode())
                 .ifPresent(r -> {
@@ -42,7 +39,6 @@ public class ProcessRouteAppService {
         ProcessRoute route = ProcessRoute.create(
                 cmd.getRouteCode(), cmd.getRouteName(), cmd.getStyleId()
         );
-        route.setTenantId(tenantId);
         route.setDescription(cmd.getDescription());
 
         // 添加工序步骤
@@ -55,7 +51,6 @@ public class ProcessRouteAppService {
                 step.setStandardTime(stepDTO.getStandardTime());
                 step.setStandardOutput(stepDTO.getStandardOutput());
                 step.setDescription(stepDTO.getDescription());
-                step.setTenantId(tenantId);
                 route.addStep(step);
             }
         }
@@ -82,8 +77,7 @@ public class ProcessRouteAppService {
      * 查询所有启用的工艺路线
      */
     public List<ProcessRouteVO> listActiveRoutes() {
-        Long tenantId = TenantContext.getTenantId();
-        return processRouteRepository.findByStatus(tenantId, "ACTIVE").stream()
+        return processRouteRepository.findByStatus("ACTIVE").stream()
                 .map(this::toVO)
                 .collect(Collectors.toList());
     }
@@ -92,8 +86,7 @@ public class ProcessRouteAppService {
      * 按款式查询工艺路线
      */
     public List<ProcessRouteVO> listRoutesByStyle(Long styleId) {
-        Long tenantId = TenantContext.getTenantId();
-        return processRouteRepository.findByStyleId(tenantId, styleId).stream()
+        return processRouteRepository.findByStyleId(styleId).stream()
                 .map(this::toVO)
                 .collect(Collectors.toList());
     }
@@ -132,7 +125,7 @@ public class ProcessRouteAppService {
         vo.setStyleId(route.getStyleId());
         vo.setDescription(route.getDescription());
         vo.setStatus(route.getStatus());
-        vo.setCreateBy(route.getCreateBy());
+        vo.setCreateBy(String.valueOf(route.getCreateBy()));
         vo.setCreateTime(route.getCreateTime());
 
         if (route.getSteps() != null) {

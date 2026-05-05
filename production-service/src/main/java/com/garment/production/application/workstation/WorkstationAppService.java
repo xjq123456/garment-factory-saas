@@ -1,7 +1,6 @@
 package com.garment.production.application.workstation;
 
 import com.garment.common.domain.BizException;
-import com.garment.common.domain.TenantContext;
 import com.garment.production.application.workstation.dto.CreateWorkstationCommand;
 import com.garment.production.application.workstation.dto.WorkstationVO;
 import com.garment.production.domain.workstation.entity.Workstation;
@@ -31,8 +30,6 @@ public class WorkstationAppService {
      */
     @Transactional
     public WorkstationVO createWorkstation(CreateWorkstationCommand cmd) {
-        Long tenantId = TenantContext.getTenantId();
-
         // 检查编号唯一性
         workstationRepository.findByStationCode(cmd.getStationCode())
                 .ifPresent(s -> {
@@ -43,7 +40,6 @@ public class WorkstationAppService {
                 cmd.getStationCode(), cmd.getStationName(),
                 cmd.getWorkshop(), WorkstationType.valueOf(cmd.getStationType())
         );
-        station.setTenantId(tenantId);
         station.setProductionLine(cmd.getProductionLine());
         station.setEquipmentCode(cmd.getEquipmentCode());
         station.setRemark(cmd.getRemark());
@@ -122,8 +118,7 @@ public class WorkstationAppService {
      * 查询所有工位
      */
     public List<WorkstationVO> listAllStations() {
-        Long tenantId = TenantContext.getTenantId();
-        return workstationRepository.findAll(tenantId).stream()
+        return workstationRepository.findAll().stream()
                 .map(this::toVO)
                 .collect(Collectors.toList());
     }
@@ -132,8 +127,7 @@ public class WorkstationAppService {
      * 查询可用工位（指定类型）
      */
     public List<WorkstationVO> listAvailableStations(WorkstationType type) {
-        Long tenantId = TenantContext.getTenantId();
-        return workstationRepository.findAvailable(tenantId, type).stream()
+        return workstationRepository.findAvailable(type).stream()
                 .map(this::toVO)
                 .collect(Collectors.toList());
     }
@@ -142,8 +136,7 @@ public class WorkstationAppService {
      * 按车间查询工位
      */
     public List<WorkstationVO> listStationsByWorkshop(String workshop) {
-        Long tenantId = TenantContext.getTenantId();
-        return workstationRepository.findByWorkshop(tenantId, workshop).stream()
+        return workstationRepository.findByWorkshop(workshop).stream()
                 .map(this::toVO)
                 .collect(Collectors.toList());
     }

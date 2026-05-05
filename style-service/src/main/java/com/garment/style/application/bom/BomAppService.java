@@ -7,6 +7,7 @@ import com.garment.style.application.bom.dto.CreateBomCommand;
 import com.garment.style.application.bom.dto.UpdateBomCommand;
 import com.garment.style.domain.bom.entity.Bom;
 import com.garment.style.domain.bom.entity.BomItem;
+import com.garment.style.domain.bom.event.BomCreatedEvent;
 import com.garment.style.domain.bom.repository.BomRepository;
 import com.garment.style.infrastructure.event.DomainEventPublisher;
 import lombok.RequiredArgsConstructor;
@@ -45,7 +46,7 @@ public class BomAppService {
             bom.setItems(items);
         }
         bomRepository.save(bom);
-        publishEvents(bom);
+        eventPublisher.publish(new BomCreatedEvent(tenantId, bom.getId(), cmd.getBomCode()));
         return bom;
     }
 
@@ -54,7 +55,7 @@ public class BomAppService {
         Long tenantId = AuthUserContext.requireTenantId();
         Bom bom = bomRepository.findById(bomId);
         if (bom == null) throw new BizException("BOM不存在: " + bomId);
-        bom.update(cmd.getBomName(), cmd.getVersionNo(), cmd.getRemark());
+        DomainEvent event = bom.update(cmd.getBomName(), cmd.getVersionNo(), cmd.getRemark());
         if (cmd.getItems() != null) {
             List<BomItem> items = new ArrayList<>();
             for (CreateBomCommand.BomItemDTO itemDTO : cmd.getItems()) {
@@ -69,6 +70,7 @@ public class BomAppService {
             bom.setItems(items);
         }
         bomRepository.save(bom);
+        eventPublisher.publish(event);
         return bom;
     }
 
@@ -95,9 +97,9 @@ public class BomAppService {
     public Bom confirmBom(Long bomId) {
         Bom bom = bomRepository.findById(bomId);
         if (bom == null) throw new BizException("BOM不存在: " + bomId);
-        bom.confirm();
+        DomainEvent event = bom.confirm();
         bomRepository.update(bom);
-        publishEvents(bom);
+        eventPublisher.publish(event);
         return bom;
     }
 
@@ -105,14 +107,9 @@ public class BomAppService {
     public Bom deprecateBom(Long bomId) {
         Bom bom = bomRepository.findById(bomId);
         if (bom == null) throw new BizException("BOM不存在: " + bomId);
-        bom.deprecate();
+        DomainEvent event = bom.deprecate();
         bomRepository.update(bom);
-        publishEvents(bom);
+        eventPublisher.publish(event);
         return bom;
-    }
-
-    private void publishEvents(Bom bom) {
-        List<DomainEvent> events = bom.pullEvents();
-        events.forEach(eventPublisher::publish);
     }
 }
