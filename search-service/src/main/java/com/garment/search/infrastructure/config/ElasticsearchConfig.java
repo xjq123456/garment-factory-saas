@@ -1,55 +1,34 @@
 package com.garment.search.infrastructure.config;
 
-import org.apache.http.HttpHost;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestClientBuilder;
-import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Elasticsearch 客户端配置。
+ * Elasticsearch 配置。
+ * <p>
+ * Spring Boot 3.1.5 通过 {@code spring.elasticsearch.*} 属性自动配置
+ * {@link org.springframework.data.elasticsearch.core.ElasticsearchOperations}，
+ * 无需手动创建客户端 Bean。
+ * <p>
+ * 连接参数在 application.yml 中配置：
+ * <pre>
+ * spring:
+ *   elasticsearch:
+ *     uris: http://localhost:9200
+ *     username: elastic
+ *     password: xxx
+ * </pre>
  */
 @Configuration
 public class ElasticsearchConfig {
 
-    @Value("${elasticsearch.host:localhost}")
-    private String host;
+    @Value("${search.index.prefix:garment_}")
+    private String indexPrefix;
 
-    @Value("${elasticsearch.port:9200}")
-    private int port;
-
-    @Value("${elasticsearch.scheme:http}")
-    private String scheme;
-
-    @Value("${elasticsearch.username:}")
-    private String username;
-
-    @Value("${elasticsearch.password:}")
-    private String password;
-
-    @Bean(destroyMethod = "close")
-    public RestHighLevelClient restHighLevelClient() {
-        RestClientBuilder builder = RestClient.builder(new HttpHost(host, port, scheme));
-
-        if (username != null && !username.isEmpty()) {
-            BasicCredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-            credentialsProvider.setCredentials(AuthScope.ANY,
-                    new UsernamePasswordCredentials(username, password));
-            builder.setHttpClientConfigCallback(httpClientBuilder ->
-                    httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider));
-        }
-
-        builder.setRequestConfigCallback(requestConfigBuilder ->
-                requestConfigBuilder
-                        .setConnectTimeout(5000)
-                        .setSocketTimeout(60000)
-                        .setConnectionRequestTimeout(5000));
-
-        return new RestHighLevelClient(builder);
+    /**
+     * 索引名称前缀，供其他组件注入使用。
+     */
+    public String getIndexPrefix() {
+        return indexPrefix;
     }
 }

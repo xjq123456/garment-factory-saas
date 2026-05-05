@@ -34,7 +34,7 @@ public class SearchEventListener {
     /**
      * 监听款型事件，同步索引。
      */
-    @KafkaListener(topics = "${search.kafka.topics.style:style-events}", groupId = "${spring.kafka.consumer.group-id}")
+    @KafkaListener(topics = "${search.kafka.topics.style:style-events}", groupId = "${spring.kafka.consumer.group-id:search-service}")
     public void onStyleEvent(ConsumerRecord<String, String> record) {
         log.info("收到款型事件: topic={}, partition={}, key={}", record.topic(), record.partition(), record.key());
         try {
@@ -71,7 +71,7 @@ public class SearchEventListener {
     /**
      * 监听订单事件，同步索引。
      */
-    @KafkaListener(topics = "${search.kafka.topics.order:order-events}", groupId = "${spring.kafka.consumer.group-id}")
+    @KafkaListener(topics = "${search.kafka.topics.order:order-events}", groupId = "${spring.kafka.consumer.group-id:search-service}")
     public void onOrderEvent(ConsumerRecord<String, String> record) {
         log.info("收到订单事件: topic={}, key={}", record.topic(), record.key());
         try {
@@ -102,7 +102,7 @@ public class SearchEventListener {
     /**
      * 监听生产事件，同步索引。
      */
-    @KafkaListener(topics = "${search.kafka.topics.production:production-events}", groupId = "${spring.kafka.consumer.group-id}")
+    @KafkaListener(topics = "${search.kafka.topics.production:production-events}", groupId = "${spring.kafka.consumer.group-id:search-service}")
     public void onProductionEvent(ConsumerRecord<String, String> record) {
         log.info("收到生产事件: topic={}, key={}", record.topic(), record.key());
         try {

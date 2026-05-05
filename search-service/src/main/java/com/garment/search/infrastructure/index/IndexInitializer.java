@@ -2,18 +2,13 @@ package com.garment.search.infrastructure.index;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.client.indices.CreateIndexRequest;
-import org.elasticsearch.client.indices.CreateIndexResponse;
-import org.elasticsearch.client.indices.GetIndexRequest;
-import org.elasticsearch.common.settings.Settings;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.IndexOperations;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.stereotype.Component;
-
-import java.io.IOException;
-import java.util.Map;
 
 /**
  * ES 索引初始化器：在应用启动时确保必要的索引模板和索引存在。
@@ -23,7 +18,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class IndexInitializer {
 
-    private final RestHighLevelClient client;
+    private final ElasticsearchOperations elasticsearchOperations;
 
     @EventListener(ApplicationReadyEvent.class)
     public void initIndices() {
@@ -36,66 +31,58 @@ public class IndexInitializer {
      * 检查索引是否存在。
      */
     public boolean indexExists(String indexName) {
-        try {
-            return client.indices().exists(
-                    new GetIndexRequest(indexName), RequestOptions.DEFAULT);
-        } catch (IOException e) {
-            log.error("检查索引存在性失败: {}", indexName, e);
-            return false;
-        }
+        IndexOperations indexOps = elasticsearchOperations.indexOps(IndexCoordinates.of(indexName));
+        return indexOps.exists();
     }
 
     /**
      * 创建单个索引（含 ik 分词器配置）。
      */
     public void createIndex(String indexName) {
-        try {
-            if (indexExists(indexName)) {
-                log.debug("索引已存在: {}", indexName);
-                return;
-            }
-
-            CreateIndexRequest request = new CreateIndexRequest(indexName);
-            request.settings(Settings.builder()
-                    .put("index.number_of_shards", 1)
-                    .put("index.number_of_replicas", 0)
-                    .build());
-
-            request.mapping(Map.of(
-                    "properties", Map.of(
-                            "id", Map.of("type", "keyword"),
-                            "indexType", Map.of("type", "keyword"),
-                            "tenantId", Map.of("type", "long"),
-                            "title", Map.of(
-                                    "type", "text",
-                                    "analyzer", "ik_max_word",
-                                    "search_analyzer", "ik_smart",
-                                    "fields", Map.of(
-                                            "ik", Map.of(
-                                                    "type", "text",
-                                                    "analyzer", "ik_max_word",
-                                                    "search_analyzer", "ik_smart"
-                                            ),
-                                            "keyword", Map.of("type", "keyword", "ignore_above", 256)
-                                    )
-                            ),
-                            "body", Map.of(
-                                    "type", "text",
-                                    "analyzer", "ik_max_word",
-                                    "search_analyzer", "ik_smart"
-                            ),
-                            "createdAt", Map.of("type", "date", "format", "yyyy-MM-dd'T'HH:mm:ss"),
-                            "updatedAt", Map.of("type", "date", "format", "yyyy-MM-dd'T'HH:mm:ss")
-                    )
-            ));
-
-            CreateIndexResponse response = client.indices().create(request, RequestOptions.DEFAULT);
-            if (response.isAcknowledged()) {
-                log.info("创建索引成功: {}", indexName);
-            }
-        } catch (IOException e) {
-            log.error("创建索引失败: {}", indexName, e);
-            throw new RuntimeException("创建索引失败: " + indexName, e);
+        IndexOperations indexOps = elasticsearchOperations.indexOps(IndexCoordinates.of(indexName));
+        if (indexOps.exists()) {
+            log.debug("索引已存在: {}", indexName);
+            return;
         }
+
+        Document settings = Document.parse("""
+                {
+                    "index.number_of_shards": 1,
+                    "index.number_of_replicas": 0
+                }
+                """);
+
+        Document mapping = Document.parse("""
+                {
+                    "properties": {
+                        "id": { "type": "keyword" },
+                        "indexType": { "type": "keyword" },
+                        "tenantId": { "type": "long" },
+                        "title": {
+                            "type": "text",
+                            "analyzer": "ik_max_word",
+                            "search_analyzer": "ik_smart",
+                            "fields": {
+                                "ik": {
+                                    "type": "text",
+                                    "analyzer": "ik_max_word",
+                                    "search_analyzer": "ik_smart"
+                                },
+                                "keyword": { "type": "keyword", "ignore_above": 256 }
+                            }
+                        },
+                        "body": {
+                            "type": "text",
+                            "analyzer": "ik_max_word",
+                            "search_analyzer": "ik_smart"
+                        },
+                        "createdAt": { "type": "date", "format": "yyyy-MM-dd'T'HH:mm:ss" },
+                        "updatedAt": { "type": "date", "format": "yyyy-MM-dd'T'HH:mm:ss" }
+                    }
+                }
+                """);
+
+        indexOps.create(settings, mapping);
+        log.info("创建索引成功: {}", indexName);
     }
 }

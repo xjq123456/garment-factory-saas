@@ -29,7 +29,6 @@ public final class MenuConverter {
         d.setUpdateBy(menu.getUpdateBy());
         d.setCreateTime(menu.getCreateTime());
         d.setUpdateTime(menu.getUpdateTime());
-        d.setIsDeleted(menu.getDeleted());
         return d;
     }
 
@@ -52,7 +51,6 @@ public final class MenuConverter {
         menu.setUpdateBy(d.getUpdateBy());
         menu.setCreateTime(d.getCreateTime());
         menu.setUpdateTime(d.getUpdateTime());
-        menu.setDeleted(d.getIsDeleted());
         return menu;
     }
 }

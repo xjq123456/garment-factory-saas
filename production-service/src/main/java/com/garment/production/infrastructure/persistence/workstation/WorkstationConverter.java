@@ -30,7 +30,6 @@ public class WorkstationConverter {
         DO.setCreateTime(entity.getCreateTime());
         DO.setUpdateBy(entity.getUpdateBy());
         DO.setUpdateTime(entity.getUpdateTime());
-        DO.setDeleted(entity.getDeleted());
         DO.setVersion(entity.getVersion());
         return DO;
     }
@@ -54,7 +53,6 @@ public class WorkstationConverter {
         entity.setCreateTime(DO.getCreateTime());
         entity.setUpdateBy(DO.getUpdateBy());
         entity.setUpdateTime(DO.getUpdateTime());
-        entity.setDeleted(DO.getDeleted());
         entity.setVersion(DO.getVersion());
         return entity;
     }

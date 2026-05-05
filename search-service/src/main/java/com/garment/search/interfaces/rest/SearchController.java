@@ -136,7 +136,6 @@ public class SearchController {
                     item.setType(doc.getIndexType() != null ? doc.getIndexType().name() : null);
                     item.setTitle(doc.getTitle());
                     item.setBody(doc.getBody());
-                    item.setScore(doc.getScore());
                     item.setAttributes(doc.getAttributes());
                     item.setCreatedAt(doc.getCreatedAt());
                     item.setUpdatedAt(doc.getUpdatedAt());

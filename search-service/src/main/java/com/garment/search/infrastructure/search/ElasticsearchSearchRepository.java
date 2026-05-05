@@ -1,5 +1,6 @@
 package com.garment.search.infrastructure.search;
 
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.garment.search.domain.index.model.IndexType;
 import com.garment.search.domain.index.model.SearchDocument;
@@ -10,16 +11,17 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
+import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
-import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -60,7 +62,6 @@ public class ElasticsearchSearchRepository implements SearchRepository {
             return;
         }
 
-        // 按索引名分组批量写入
         Map<String, List<SearchDocument>> grouped = documents.stream()
                 .collect(Collectors.groupingBy(d -> resolveIndexName(d.getTenantId(), d.getIndexType())));
 
@@ -80,8 +81,6 @@ public class ElasticsearchSearchRepository implements SearchRepository {
 
     @Override
     public void delete(String indexType, String id) {
-        // 遍历可能的租户索引进行删除（运维场景）
-        // 实际生产中应明确指定租户
         try {
             elasticsearchOperations.delete(id, IndexCoordinates.of(indexType));
         } catch (Exception e) {
@@ -96,50 +95,42 @@ public class ElasticsearchSearchRepository implements SearchRepository {
         long startTime = System.currentTimeMillis();
         Long tenantId = com.garment.common.domain.AuthUserContext.requireTenantId();
 
-        // 确定搜索的索引列表
         List<String> indexNames = resolveSearchIndexes(tenantId, indexTypes);
 
-        // 构建 NativeQuery
-        var queryBuilder = new org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder();
+        NativeQueryBuilder queryBuilder = new NativeQueryBuilder();
 
-        // 关键词全文搜索
         if (keyword != null && !keyword.isBlank()) {
-            var boolQuery = org.springframework.data.elasticsearch.client.elc.Queries
-                    .multiMatchQuery(keyword, "title", "body", "title.ik", "body.ik");
-            queryBuilder.withQuery(boolQuery);
+            queryBuilder.withQuery(Query.of(q -> q.multiMatch(m -> m
+                    .fields(List.of("title", "body", "title.ik", "body.ik"))
+                    .query(keyword))));
         } else {
-            queryBuilder.withQuery(org.springframework.data.elasticsearch.client.elc.Queries.matchAllQuery());
+            queryBuilder.withQuery(Query.of(q -> q.matchAll(m -> m)));
         }
 
-        // 过滤条件
         if (filters != null && !filters.isEmpty()) {
             for (Map.Entry<String, Object> entry : filters.entrySet()) {
-                queryBuilder.withFilter(
-                        org.springframework.data.elasticsearch.client.elc.Queries
-                                .termQuery(entry.getKey(), entry.getValue())
-                );
+                String field = entry.getKey();
+                Object value = entry.getValue();
+                queryBuilder.withFilter(Query.of(q -> q.term(t -> t
+                        .field(field)
+                        .value(String.valueOf(value)))));
             }
         }
 
-        // 分页
-        queryBuilder.withPageable(org.springframework.data.domain.PageRequest.of(page, size));
+        queryBuilder.withPageable(PageRequest.of(page, size));
 
-        // 排序
         if (sortField != null && !sortField.isBlank()) {
-            var sort = sortDesc
-                    ? org.springframework.data.domain.Sort.by(
-                    org.springframework.data.domain.Sort.Order.desc(sortField))
-                    : org.springframework.data.domain.Sort.by(
-                    org.springframework.data.domain.Sort.Order.asc(sortField));
+            Sort sort = sortDesc
+                    ? Sort.by(Sort.Order.desc(sortField))
+                    : Sort.by(Sort.Order.asc(sortField));
             queryBuilder.withSort(sort);
         }
 
-        NativeSearchQuery searchQuery = queryBuilder.build();
+        NativeQuery searchQuery = queryBuilder.build();
 
         SearchHits<Map> searchHits = elasticsearchOperations.search(
                 searchQuery, Map.class, IndexCoordinates.of(indexNames.toArray(new String[0])));
 
-        // 转换结果
         List<SearchDocument> documents = searchHits.getSearchHits().stream()
                 .map(this::hitToDocument)
                 .toList();
@@ -165,13 +156,11 @@ public class ElasticsearchSearchRepository implements SearchRepository {
             indexNames = resolveSearchIndexes(tenantId, null);
         }
 
-        // 使用 prefix query 实现自动补全
-        var prefixQuery = org.springframework.data.elasticsearch.client.elc.Queries
-                .prefixQuery("title.keyword", keyword.toLowerCase());
-
-        NativeSearchQuery query = new NativeQueryBuilder()
-                .withQuery(prefixQuery)
-                .withPageable(org.springframework.data.domain.PageRequest.of(0, 10))
+        NativeQuery query = new NativeQueryBuilder()
+                .withQuery(Query.of(q -> q.prefix(p -> p
+                        .field("title.keyword")
+                        .value(keyword.toLowerCase()))))
+                .withPageable(PageRequest.of(0, 10))
                 .build();
 
         SearchHits<Map> hits = elasticsearchOperations.search(
@@ -191,31 +180,21 @@ public class ElasticsearchSearchRepository implements SearchRepository {
 
     // ============ 私有辅助方法 ============
 
-    /**
-     * 解析索引名称：{prefix}{tenantId}_{indexType}
-     */
     private String resolveIndexName(Long tenantId, IndexType indexType) {
         return indexPrefix + tenantId + "_" + indexType.getCode();
     }
 
-    /**
-     * 解析搜索索引列表。
-     */
     private List<String> resolveSearchIndexes(Long tenantId, List<String> indexTypes) {
         if (indexTypes != null && !indexTypes.isEmpty()) {
             return indexTypes.stream()
                     .map(code -> resolveIndexName(tenantId, IndexType.fromCode(code)))
                     .toList();
         }
-        // 搜索全部索引
         return Arrays.stream(IndexType.values())
                 .map(type -> resolveIndexName(tenantId, type))
                 .toList();
     }
 
-    /**
-     * 构建文档源数据 Map。
-     */
     private Map<String, Object> buildDocumentSource(SearchDocument document) {
         Map<String, Object> source = new HashMap<>();
         source.put("id", document.getId());
@@ -231,9 +210,6 @@ public class ElasticsearchSearchRepository implements SearchRepository {
         return source;
     }
 
-    /**
-     * 将搜索命中转换为 SearchDocument。
-     */
     private SearchDocument hitToDocument(SearchHit<Map> hit) {
         Map<String, Object> source = hit.getContent();
         Map<String, Object> attributes = new HashMap<>(source);

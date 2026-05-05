@@ -9,7 +9,7 @@ package com.garment.common.domain;
  * 业务代码可直接通过 {@link #getAuthInfo()} 获取当前请求的完整认证信息，
  * 无需在方法签名中逐层传递 tenantId / userId。
  * <p>
- * 参考 zanmall-local 的 AuthUserContext 设计，分离"认证上下文"关注点。
+ * AuthUserContext 设计，分离"认证上下文"关注点。
  */
 public final class AuthUserContext {
 
