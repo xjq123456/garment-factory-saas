@@ -9,6 +9,11 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * BOM 仓储实现。
+ * <p>
+ * 多租户隔离由 TenantLineInnerInterceptor 在 SQL 层自动追加 tenant_id 条件。
+ */
 @Repository
 @RequiredArgsConstructor
 public class BomRepositoryImpl implements BomRepository {
@@ -27,7 +32,7 @@ public class BomRepositoryImpl implements BomRepository {
         }
         // 保存明细行：先删后插
         if (bom.getItems() != null && !bom.getItems().isEmpty()) {
-            deleteItemsByBomId(bom.getId(), bom.getTenantId());
+            deleteItemsByBomId(bom.getId());
             for (BomItem item : bom.getItems()) {
                 item.setBomId(bom.getId());
                 BomItemDO itemDO = BomConverter.itemToDO(item);
@@ -43,75 +48,69 @@ public class BomRepositoryImpl implements BomRepository {
     }
 
     @Override
-    public Bom findById(Long id, Long tenantId) {
-        LambdaQueryWrapper<BomDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(BomDO::getId, id).eq(BomDO::getTenantId, tenantId);
-        BomDO bomDO = bomMapper.selectOne(wrapper);
+    public Bom findById(Long id) {
+        BomDO bomDO = bomMapper.selectById(id);
         if (bomDO == null) return null;
         Bom bom = BomConverter.toDomain(bomDO);
         // 加载明细
         LambdaQueryWrapper<BomItemDO> itemWrapper = new LambdaQueryWrapper<>();
-        itemWrapper.eq(BomItemDO::getBomId, id).eq(BomItemDO::getTenantId, tenantId)
-                   .orderByAsc(BomItemDO::getSortOrder);
+        itemWrapper.eq(BomItemDO::getBomId, id).orderByAsc(BomItemDO::getSortOrder);
         List<BomItemDO> itemDOs = bomItemMapper.selectList(itemWrapper);
         bom.setItems(BomConverter.itemsToDomain(itemDOs));
         return bom;
     }
 
     @Override
-    public Bom findByCode(String bomCode, Long tenantId) {
+    public Bom findByCode(String bomCode) {
         LambdaQueryWrapper<BomDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(BomDO::getBomCode, bomCode).eq(BomDO::getTenantId, tenantId);
+        wrapper.eq(BomDO::getBomCode, bomCode);
         BomDO bomDO = bomMapper.selectOne(wrapper);
         if (bomDO == null) return null;
         return BomConverter.toDomain(bomDO);
     }
 
     @Override
-    public List<Bom> findByStyleId(Long styleId, Long tenantId) {
+    public List<Bom> findByStyleId(Long styleId) {
         LambdaQueryWrapper<BomDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(BomDO::getStyleId, styleId).eq(BomDO::getTenantId, tenantId)
-               .orderByDesc(BomDO::getCreatedAt);
+        wrapper.eq(BomDO::getStyleId, styleId).orderByDesc(BomDO::getCreatedAt);
         return bomMapper.selectList(wrapper).stream().map(BomConverter::toDomain).toList();
     }
 
     @Override
-    public List<Bom> findByTenantId(Long tenantId) {
+    public List<Bom> findAll() {
         LambdaQueryWrapper<BomDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(BomDO::getTenantId, tenantId).orderByDesc(BomDO::getCreatedAt);
+        wrapper.orderByDesc(BomDO::getCreatedAt);
         return bomMapper.selectList(wrapper).stream().map(BomConverter::toDomain).toList();
     }
 
     @Override
-    public void deleteById(Long id, Long tenantId) {
-        deleteItemsByBomId(id, tenantId);
-        LambdaQueryWrapper<BomDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(BomDO::getId, id).eq(BomDO::getTenantId, tenantId);
-        bomMapper.delete(wrapper);
+    public void deleteById(Long id) {
+        deleteItemsByBomId(id);
+        bomMapper.deleteById(id);
     }
 
     @Override
-    public void deleteByStyleId(Long styleId, Long tenantId) {
+    public void deleteByStyleId(Long styleId) {
         // 先查出所有 BOM ID 再删明细
         LambdaQueryWrapper<BomDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(BomDO::getStyleId, styleId).eq(BomDO::getTenantId, tenantId);
+        wrapper.eq(BomDO::getStyleId, styleId);
         List<BomDO> boms = bomMapper.selectList(wrapper);
         for (BomDO bom : boms) {
-            deleteItemsByBomId(bom.getId(), tenantId);
+            deleteItemsByBomId(bom.getId());
         }
         bomMapper.delete(wrapper);
     }
 
     @Override
-    public boolean existsByBomCode(String bomCode, Long tenantId) {
+    public boolean existsByBomCode(String bomCode) {
         LambdaQueryWrapper<BomDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(BomDO::getBomCode, bomCode).eq(BomDO::getTenantId, tenantId);
+        wrapper.eq(BomDO::getBomCode, bomCode);
         return bomMapper.selectCount(wrapper) > 0;
     }
 
-    private void deleteItemsByBomId(Long bomId, Long tenantId) {
+    private void deleteItemsByBomId(Long bomId) {
         LambdaQueryWrapper<BomItemDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(BomItemDO::getBomId, bomId).eq(BomItemDO::getTenantId, tenantId);
+        wrapper.eq(BomItemDO::getBomId, bomId);
         bomItemMapper.delete(wrapper);
     }
 }

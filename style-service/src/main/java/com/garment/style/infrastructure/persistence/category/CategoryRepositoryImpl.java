@@ -8,6 +8,11 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * 分类仓储实现。
+ * <p>
+ * 多租户隔离由 TenantLineInnerInterceptor 在 SQL 层自动追加 tenant_id 条件。
+ */
 @Repository
 @RequiredArgsConstructor
 public class CategoryRepositoryImpl implements CategoryRepository {
@@ -31,41 +36,35 @@ public class CategoryRepositoryImpl implements CategoryRepository {
     }
 
     @Override
-    public Category findById(Long id, Long tenantId) {
-        LambdaQueryWrapper<CategoryDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(CategoryDO::getId, id).eq(CategoryDO::getTenantId, tenantId);
-        return CategoryConverter.toDomain(categoryMapper.selectOne(wrapper));
+    public Category findById(Long id) {
+        return CategoryConverter.toDomain(categoryMapper.selectById(id));
     }
 
     @Override
-    public List<Category> findByTenantId(Long tenantId) {
+    public List<Category> findAll() {
         LambdaQueryWrapper<CategoryDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(CategoryDO::getTenantId, tenantId).orderByAsc(CategoryDO::getSortOrder);
+        wrapper.orderByAsc(CategoryDO::getSortOrder);
         return categoryMapper.selectList(wrapper).stream().map(CategoryConverter::toDomain).toList();
     }
 
     @Override
-    public List<Category> findByParentId(Long parentId, Long tenantId) {
+    public List<Category> findByParentId(Long parentId) {
         LambdaQueryWrapper<CategoryDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(CategoryDO::getTenantId, tenantId)
-               .eq(CategoryDO::getParentId, parentId)
+        wrapper.eq(CategoryDO::getParentId, parentId)
                .orderByAsc(CategoryDO::getSortOrder);
         return categoryMapper.selectList(wrapper).stream().map(CategoryConverter::toDomain).toList();
     }
 
     @Override
-    public void deleteById(Long id, Long tenantId) {
-        LambdaQueryWrapper<CategoryDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(CategoryDO::getId, id).eq(CategoryDO::getTenantId, tenantId);
-        categoryMapper.delete(wrapper);
+    public void deleteById(Long id) {
+        categoryMapper.deleteById(id);
     }
 
     @Override
-    public boolean existsByName(String name, Long parentId, Long tenantId) {
+    public boolean existsByName(String name, Long parentId) {
         LambdaQueryWrapper<CategoryDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(CategoryDO::getTenantId, tenantId)
-               .eq(CategoryDO::getName, name)
-               .eq(CategoryDO::getParentId, parentId);
+        wrapper.eq(CategoryDO::getParentId, parentId)
+               .eq(CategoryDO::getName, name);
         return categoryMapper.selectCount(wrapper) > 0;
     }
 }

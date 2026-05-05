@@ -3,7 +3,7 @@ package com.garment.common.infrastructure;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.handler.TenantLineHandler;
 import com.baomidou.mybatisplus.extension.plugins.inner.TenantLineInnerInterceptor;
-import com.garment.common.domain.TenantContext;
+import com.garment.common.domain.AuthUserContext;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.LongValue;
 import net.sf.jsqlparser.expression.NullValue;
@@ -39,7 +39,7 @@ public final class MybatisPlusTenantConfig {
         TenantLineHandler handler = new TenantLineHandler() {
             @Override
             public Expression getTenantId() {
-                Long tenantId = TenantContext.getTenantId();
+                Long tenantId = AuthUserContext.getTenantId();
                 return new LongValue(tenantId != null ? tenantId : 0L);
             }
 

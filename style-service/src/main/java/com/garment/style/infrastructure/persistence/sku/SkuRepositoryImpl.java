@@ -8,6 +8,12 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * SKU 仓储实现。
+ * <p>
+ * 多租户隔离由 {@code MybatisPlusTenantConfig} 的 TenantLineInnerInterceptor
+ * 在 SQL 层自动追加 tenant_id 条件，此处无需手动过滤。
+ */
 @Repository
 @RequiredArgsConstructor
 public class SkuRepositoryImpl implements SkuRepository {
@@ -38,52 +44,47 @@ public class SkuRepositoryImpl implements SkuRepository {
     }
 
     @Override
-    public void deleteById(Long id, Long tenantId) {
+    public void deleteById(Long id) {
+        skuMapper.deleteById(id);
+    }
+
+    @Override
+    public void deleteByStyleId(Long styleId) {
         LambdaQueryWrapper<SkuDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(SkuDO::getId, id).eq(SkuDO::getTenantId, tenantId);
+        wrapper.eq(SkuDO::getStyleId, styleId);
         skuMapper.delete(wrapper);
     }
 
     @Override
-    public void deleteByStyleId(Long styleId, Long tenantId) {
-        LambdaQueryWrapper<SkuDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(SkuDO::getStyleId, styleId).eq(SkuDO::getTenantId, tenantId);
-        skuMapper.delete(wrapper);
+    public Sku findById(Long id) {
+        return SkuConverter.toDomain(skuMapper.selectById(id));
     }
 
     @Override
-    public Sku findById(Long id, Long tenantId) {
+    public Sku findByCode(String skuCode) {
         LambdaQueryWrapper<SkuDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(SkuDO::getId, id).eq(SkuDO::getTenantId, tenantId);
+        wrapper.eq(SkuDO::getSkuCode, skuCode);
         return SkuConverter.toDomain(skuMapper.selectOne(wrapper));
     }
 
     @Override
-    public Sku findByCode(String skuCode, Long tenantId) {
+    public List<Sku> findByStyleId(Long styleId) {
         LambdaQueryWrapper<SkuDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(SkuDO::getSkuCode, skuCode).eq(SkuDO::getTenantId, tenantId);
-        return SkuConverter.toDomain(skuMapper.selectOne(wrapper));
-    }
-
-    @Override
-    public List<Sku> findByStyleId(Long styleId, Long tenantId) {
-        LambdaQueryWrapper<SkuDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(SkuDO::getStyleId, styleId).eq(SkuDO::getTenantId, tenantId);
-        wrapper.orderByAsc(SkuDO::getSortOrder);
+        wrapper.eq(SkuDO::getStyleId, styleId).orderByAsc(SkuDO::getSortOrder);
         return skuMapper.selectList(wrapper).stream().map(SkuConverter::toDomain).toList();
     }
 
     @Override
-    public List<Sku> findByTenantId(Long tenantId) {
+    public List<Sku> findAll() {
         LambdaQueryWrapper<SkuDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(SkuDO::getTenantId, tenantId).orderByDesc(SkuDO::getCreatedAt);
+        wrapper.orderByDesc(SkuDO::getCreatedAt);
         return skuMapper.selectList(wrapper).stream().map(SkuConverter::toDomain).toList();
     }
 
     @Override
-    public boolean existsBySkuCode(String skuCode, Long tenantId) {
+    public boolean existsBySkuCode(String skuCode) {
         LambdaQueryWrapper<SkuDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(SkuDO::getSkuCode, skuCode).eq(SkuDO::getTenantId, tenantId);
+        wrapper.eq(SkuDO::getSkuCode, skuCode);
         return skuMapper.selectCount(wrapper) > 0;
     }
 }

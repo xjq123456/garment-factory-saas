@@ -1,8 +1,8 @@
 package com.garment.style.application.category;
 
+import com.garment.common.domain.AuthUserContext;
 import com.garment.common.domain.BizException;
 import com.garment.common.domain.DomainEvent;
-import com.garment.common.domain.TenantContext;
 import com.garment.style.application.category.dto.CreateCategoryCommand;
 import com.garment.style.application.category.dto.UpdateCategoryCommand;
 import com.garment.style.domain.category.entity.Category;
@@ -23,8 +23,8 @@ public class CategoryAppService {
 
     @Transactional(rollbackFor = Exception.class)
     public Category createCategory(CreateCategoryCommand cmd) {
-        Long tenantId = TenantContext.requireTenantId();
-        if (categoryRepository.existsByName(cmd.getName(), cmd.getParentId(), tenantId)) {
+        Long tenantId = AuthUserContext.requireTenantId();
+        if (categoryRepository.existsByName(cmd.getName(), cmd.getParentId())) {
             throw new BizException("同级分类名称已存在: " + cmd.getName());
         }
         Category category = Category.create(tenantId, cmd.getParentId(),
@@ -36,8 +36,7 @@ public class CategoryAppService {
 
     @Transactional(rollbackFor = Exception.class)
     public Category updateCategory(Long categoryId, UpdateCategoryCommand cmd) {
-        Long tenantId = TenantContext.requireTenantId();
-        Category category = categoryRepository.findById(categoryId, tenantId);
+        Category category = categoryRepository.findById(categoryId);
         if (category == null) {
             throw new BizException("分类不存在: " + categoryId);
         }
@@ -49,18 +48,16 @@ public class CategoryAppService {
 
     @Transactional(rollbackFor = Exception.class)
     public void deleteCategory(Long categoryId) {
-        Long tenantId = TenantContext.requireTenantId();
-        Category category = categoryRepository.findById(categoryId, tenantId);
+        Category category = categoryRepository.findById(categoryId);
         if (category == null) {
             throw new BizException("分类不存在: " + categoryId);
         }
-        categoryRepository.deleteById(categoryId, tenantId);
+        categoryRepository.deleteById(categoryId);
     }
 
     @Transactional(readOnly = true)
     public Category getCategory(Long categoryId) {
-        Long tenantId = TenantContext.requireTenantId();
-        Category category = categoryRepository.findById(categoryId, tenantId);
+        Category category = categoryRepository.findById(categoryId);
         if (category == null) {
             throw new BizException("分类不存在: " + categoryId);
         }
@@ -69,18 +66,17 @@ public class CategoryAppService {
 
     @Transactional(readOnly = true)
     public List<Category> listCategories() {
-        return categoryRepository.findByTenantId(TenantContext.requireTenantId());
+        return categoryRepository.findAll();
     }
 
     @Transactional(readOnly = true)
     public List<Category> listByParentId(Long parentId) {
-        return categoryRepository.findByParentId(parentId, TenantContext.requireTenantId());
+        return categoryRepository.findByParentId(parentId);
     }
 
     @Transactional(rollbackFor = Exception.class)
     public void enableCategory(Long categoryId) {
-        Long tenantId = TenantContext.requireTenantId();
-        Category category = categoryRepository.findById(categoryId, tenantId);
+        Category category = categoryRepository.findById(categoryId);
         if (category == null) throw new BizException("分类不存在: " + categoryId);
         category.enable();
         categoryRepository.update(category);
@@ -88,8 +84,7 @@ public class CategoryAppService {
 
     @Transactional(rollbackFor = Exception.class)
     public void disableCategory(Long categoryId) {
-        Long tenantId = TenantContext.requireTenantId();
-        Category category = categoryRepository.findById(categoryId, tenantId);
+        Category category = categoryRepository.findById(categoryId);
         if (category == null) throw new BizException("分类不存在: " + categoryId);
         category.disable();
         categoryRepository.update(category);

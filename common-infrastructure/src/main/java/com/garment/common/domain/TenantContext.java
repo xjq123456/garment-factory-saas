@@ -3,35 +3,58 @@ package com.garment.common.domain;
 /**
  * 租户上下文（基于 ThreadLocal）。
  * <p>
- * 在请求进入时由 WebFilter 设置，请求结束时清理。
- * 业务代码可通过 {@link #getTenantId()} 获取当前租户标识。
+ * <b>兼容桥接类</b>——推荐直接使用 {@link AuthUserContext} 获取完整的认证信息。
+ * <p>
+ * 新代码应使用：
+ * <pre>
+ *   Long tenantId = AuthUserContext.requireTenantId();
+ *   AuthInfo info  = AuthUserContext.getAuthInfo();
+ * </pre>
+ * <p>
+ * 旧代码中直接调用 {@link #getTenantId()} / {@link #requireTenantId()} 的地方
+ * 不会立即报错，内部已委托给 {@link AuthUserContext}。
  */
 public final class TenantContext {
 
-    private static final ThreadLocal<Long> TENANT_ID = new ThreadLocal<>();
-
     private TenantContext() {}
 
+    /**
+     * 设置租户 ID。
+     * <p>
+     * <b>注意</b>：正常流程中不需要手动调用，由 {@link com.garment.common.interfaces.TenantWebFilter}
+     * 统一通过 {@link AuthUserContext#set(AuthInfo)} 设置。
+     * 保留此方法仅为极端场景（如定时任务、MQ 消费）下手动注入。
+     */
     public static void setTenantId(Long tenantId) {
-        TENANT_ID.set(tenantId);
+        // 如果 AuthUserContext 已有数据则补充 tenantId，否则创建一个仅含 tenantId 的 AuthInfo
+        AuthInfo existing = AuthUserContext.getAuthInfo();
+        if (existing != null) {
+            existing.setTenantId(tenantId);
+        } else {
+            AuthUserContext.set(AuthInfo.of(null, null, tenantId));
+        }
     }
 
+    /**
+     * 获取当前租户 ID。
+     */
     public static Long getTenantId() {
-        return TENANT_ID.get();
+        return AuthUserContext.getTenantId();
     }
 
     /**
      * 获取当前租户 ID，若为空则抛出业务异常。
      */
     public static Long requireTenantId() {
-        Long id = TENANT_ID.get();
-        if (id == null) {
-            throw new com.garment.common.domain.BizException("当前请求未携带租户信息");
-        }
-        return id;
+        return AuthUserContext.requireTenantId();
     }
 
+    /**
+     * 清理上下文。
+     * <p>
+     * 委托给 {@link AuthUserContext#clear()}，同时清空自身的遗留数据。
+     */
     public static void clear() {
-        TENANT_ID.remove();
+        AuthUserContext.clear();
     }
 }

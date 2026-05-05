@@ -1,8 +1,8 @@
 package com.garment.style.application.bom;
 
+import com.garment.common.domain.AuthUserContext;
 import com.garment.common.domain.BizException;
 import com.garment.common.domain.DomainEvent;
-import com.garment.common.domain.TenantContext;
 import com.garment.style.application.bom.dto.CreateBomCommand;
 import com.garment.style.application.bom.dto.UpdateBomCommand;
 import com.garment.style.domain.bom.entity.Bom;
@@ -25,8 +25,8 @@ public class BomAppService {
 
     @Transactional(rollbackFor = Exception.class)
     public Bom createBom(CreateBomCommand cmd) {
-        Long tenantId = TenantContext.requireTenantId();
-        if (bomRepository.existsByBomCode(cmd.getBomCode(), tenantId)) {
+        Long tenantId = AuthUserContext.requireTenantId();
+        if (bomRepository.existsByBomCode(cmd.getBomCode())) {
             throw new BizException("BOM编码已存在: " + cmd.getBomCode());
         }
         Bom bom = Bom.create(tenantId, cmd.getStyleId(), cmd.getBomCode(),
@@ -51,8 +51,8 @@ public class BomAppService {
 
     @Transactional(rollbackFor = Exception.class)
     public Bom updateBom(Long bomId, UpdateBomCommand cmd) {
-        Long tenantId = TenantContext.requireTenantId();
-        Bom bom = bomRepository.findById(bomId, tenantId);
+        Long tenantId = AuthUserContext.requireTenantId();
+        Bom bom = bomRepository.findById(bomId);
         if (bom == null) throw new BizException("BOM不存在: " + bomId);
         bom.update(cmd.getBomName(), cmd.getVersionNo(), cmd.getRemark());
         if (cmd.getItems() != null) {
@@ -74,29 +74,26 @@ public class BomAppService {
 
     @Transactional(rollbackFor = Exception.class)
     public void deleteBom(Long bomId) {
-        Long tenantId = TenantContext.requireTenantId();
-        Bom bom = bomRepository.findById(bomId, tenantId);
+        Bom bom = bomRepository.findById(bomId);
         if (bom == null) throw new BizException("BOM不存在: " + bomId);
-        bomRepository.deleteById(bomId, tenantId);
+        bomRepository.deleteById(bomId);
     }
 
     @Transactional(readOnly = true)
     public Bom getBom(Long bomId) {
-        Long tenantId = TenantContext.requireTenantId();
-        Bom bom = bomRepository.findById(bomId, tenantId);
+        Bom bom = bomRepository.findById(bomId);
         if (bom == null) throw new BizException("BOM不存在: " + bomId);
         return bom;
     }
 
     @Transactional(readOnly = true)
     public List<Bom> listByStyleId(Long styleId) {
-        return bomRepository.findByStyleId(styleId, TenantContext.requireTenantId());
+        return bomRepository.findByStyleId(styleId);
     }
 
     @Transactional(rollbackFor = Exception.class)
     public Bom confirmBom(Long bomId) {
-        Long tenantId = TenantContext.requireTenantId();
-        Bom bom = bomRepository.findById(bomId, tenantId);
+        Bom bom = bomRepository.findById(bomId);
         if (bom == null) throw new BizException("BOM不存在: " + bomId);
         bom.confirm();
         bomRepository.update(bom);
@@ -106,8 +103,7 @@ public class BomAppService {
 
     @Transactional(rollbackFor = Exception.class)
     public Bom deprecateBom(Long bomId) {
-        Long tenantId = TenantContext.requireTenantId();
-        Bom bom = bomRepository.findById(bomId, tenantId);
+        Bom bom = bomRepository.findById(bomId);
         if (bom == null) throw new BizException("BOM不存在: " + bomId);
         bom.deprecate();
         bomRepository.update(bom);

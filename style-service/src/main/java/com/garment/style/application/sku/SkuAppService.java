@@ -1,8 +1,8 @@
 package com.garment.style.application.sku;
 
+import com.garment.common.domain.AuthUserContext;
 import com.garment.common.domain.BizException;
 import com.garment.common.domain.DomainEvent;
-import com.garment.common.domain.TenantContext;
 import com.garment.style.application.sku.dto.CreateSkuCommand;
 import com.garment.style.application.sku.dto.UpdateSkuCommand;
 import com.garment.style.domain.sku.entity.Sku;
@@ -23,8 +23,8 @@ public class SkuAppService {
 
     @Transactional(rollbackFor = Exception.class)
     public Sku createSku(CreateSkuCommand cmd) {
-        Long tenantId = TenantContext.requireTenantId();
-        if (skuRepository.existsBySkuCode(cmd.getSkuCode(), tenantId)) {
+        Long tenantId = AuthUserContext.requireTenantId();
+        if (skuRepository.existsBySkuCode(cmd.getSkuCode())) {
             throw new BizException("SKU编码已存在: " + cmd.getSkuCode());
         }
         Sku sku = Sku.create(tenantId, cmd.getStyleId(), cmd.getSkuCode(),
@@ -37,8 +37,7 @@ public class SkuAppService {
 
     @Transactional(rollbackFor = Exception.class)
     public Sku updateSku(Long skuId, UpdateSkuCommand cmd) {
-        Long tenantId = TenantContext.requireTenantId();
-        Sku sku = skuRepository.findById(skuId, tenantId);
+        Sku sku = skuRepository.findById(skuId);
         if (sku == null) throw new BizException("SKU不存在: " + skuId);
         sku.update(cmd.getColor(), cmd.getColorCode(), cmd.getSize(), cmd.getSizeType(),
                 cmd.getBarcode(), cmd.getWeight(), cmd.getExtraPrice());
@@ -49,29 +48,26 @@ public class SkuAppService {
 
     @Transactional(rollbackFor = Exception.class)
     public void deleteSku(Long skuId) {
-        Long tenantId = TenantContext.requireTenantId();
-        Sku sku = skuRepository.findById(skuId, tenantId);
+        Sku sku = skuRepository.findById(skuId);
         if (sku == null) throw new BizException("SKU不存在: " + skuId);
-        skuRepository.deleteById(skuId, tenantId);
+        skuRepository.deleteById(skuId);
     }
 
     @Transactional(readOnly = true)
     public Sku getSku(Long skuId) {
-        Long tenantId = TenantContext.requireTenantId();
-        Sku sku = skuRepository.findById(skuId, tenantId);
+        Sku sku = skuRepository.findById(skuId);
         if (sku == null) throw new BizException("SKU不存在: " + skuId);
         return sku;
     }
 
     @Transactional(readOnly = true)
     public List<Sku> listByStyleId(Long styleId) {
-        return skuRepository.findByStyleId(styleId, TenantContext.requireTenantId());
+        return skuRepository.findByStyleId(styleId);
     }
 
     @Transactional(rollbackFor = Exception.class)
     public void enableSku(Long skuId) {
-        Long tenantId = TenantContext.requireTenantId();
-        Sku sku = skuRepository.findById(skuId, tenantId);
+        Sku sku = skuRepository.findById(skuId);
         if (sku == null) throw new BizException("SKU不存在: " + skuId);
         sku.enable();
         skuRepository.update(sku);
@@ -79,8 +75,7 @@ public class SkuAppService {
 
     @Transactional(rollbackFor = Exception.class)
     public void disableSku(Long skuId) {
-        Long tenantId = TenantContext.requireTenantId();
-        Sku sku = skuRepository.findById(skuId, tenantId);
+        Sku sku = skuRepository.findById(skuId);
         if (sku == null) throw new BizException("SKU不存在: " + skuId);
         sku.disable();
         skuRepository.update(sku);

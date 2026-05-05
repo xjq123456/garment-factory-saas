@@ -43,8 +43,12 @@ public class JwtAuthGlobalFilter implements GlobalFilter, Ordered {
 
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String HEADER_USER_ID = "X-User-Id";
+    private static final String HEADER_USERNAME = "X-Username";
     private static final String HEADER_TENANT_ID = "X-Tenant-Id";
+    private static final String HEADER_ROLES = "X-Roles";
     private static final String CLAIM_TENANT_ID = "tenantId";
+    private static final String CLAIM_USERNAME = "username";
+    private static final String CLAIM_ROLES = "roles";
 
     private final GatewayJwtProperties jwtProperties;
     private final SecretKey secretKey;
@@ -93,17 +97,30 @@ public class JwtAuthGlobalFilter implements GlobalFilter, Ordered {
         String userId = claims.getSubject();
         Object tenantIdObj = claims.get(CLAIM_TENANT_ID);
         String tenantId = tenantIdObj != null ? String.valueOf(tenantIdObj) : null;
+        Object usernameObj = claims.get(CLAIM_USERNAME);
+        String username = usernameObj != null ? String.valueOf(usernameObj) : null;
+        Object rolesObj = claims.get(CLAIM_ROLES);
+        String roles = null;
+        if (rolesObj instanceof java.util.List<?> roleList) {
+            roles = roleList.stream()
+                    .map(String::valueOf)
+                    .collect(java.util.stream.Collectors.joining(","));
+        }
 
-        ServerHttpRequest mutatedRequest = request.mutate()
-                .header(HEADER_USER_ID, userId)
-                .headers(h -> {
-                    if (tenantId != null && !tenantId.isEmpty()) {
-                        h.set(HEADER_TENANT_ID, tenantId);
-                    }
-                })
-                .build();
+        ServerHttpRequest.Builder requestBuilder = request.mutate()
+                .header(HEADER_USER_ID, userId);
+        if (tenantId != null && !tenantId.isEmpty()) {
+            requestBuilder.header(HEADER_TENANT_ID, tenantId);
+        }
+        if (username != null && !username.isEmpty()) {
+            requestBuilder.header(HEADER_USERNAME, username);
+        }
+        if (roles != null && !roles.isEmpty()) {
+            requestBuilder.header(HEADER_ROLES, roles);
+        }
+        ServerHttpRequest mutatedRequest = requestBuilder.build();
 
-        log.debug("JWT 认证通过: userId={}, tenantId={}, path={}", userId, tenantId, path);
+        log.debug("JWT 认证通过: userId={}, tenantId={}, username={}, path={}", userId, tenantId, username, path);
 
         return chain.filter(exchange.mutate().request(mutatedRequest).build());
     }

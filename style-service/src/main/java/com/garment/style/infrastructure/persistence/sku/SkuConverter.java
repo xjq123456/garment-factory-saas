@@ -22,7 +22,7 @@ public final class SkuConverter {
         d.setExtraPrice(domain.getExtraPrice());
         d.setStatus(domain.getStatus());
         d.setSortOrder(domain.getSortOrder());
-        d.setVersion(domain.getVersion());
+        /*d.setVersion(domain.getVersion());*/
         return d;
     }
 

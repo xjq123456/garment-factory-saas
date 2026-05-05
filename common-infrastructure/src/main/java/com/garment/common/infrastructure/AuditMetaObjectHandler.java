@@ -1,6 +1,7 @@
 package com.garment.common.infrastructure;
 
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
+import com.garment.common.domain.AuthUserContext;
 import com.garment.common.domain.TenantContext;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.reflection.MetaObject;
@@ -21,9 +22,11 @@ public class AuditMetaObjectHandler implements MetaObjectHandler {
         LocalDateTime now = LocalDateTime.now();
         this.strictInsertFill(metaObject, "createdAt", LocalDateTime.class, now);
         this.strictInsertFill(metaObject, "updatedAt", LocalDateTime.class, now);
-        // createdBy / updatedBy 可由上层在 SecurityContext 中设置用户 ID，此处先填充 0 表示系统
-        this.strictInsertFill(metaObject, "createdBy", Long.class, 0L);
-        this.strictInsertFill(metaObject, "updatedBy", Long.class, 0L);
+        // createdBy / updatedBy 从 AuthUserContext 获取当前用户 ID
+        Long userId = AuthUserContext.getUserId();
+        long uid = userId != null ? userId : 0L;
+        this.strictInsertFill(metaObject, "createdBy", Long.class, uid);
+        this.strictInsertFill(metaObject, "updatedBy", Long.class, uid);
         // tenant_id 由 TenantLineInnerInterceptor 自动填充到 SQL，此处保证实体字段也有值
         if (metaObject.hasGetter("tenantId")) {
             Long tenantId = TenantContext.getTenantId();
@@ -36,6 +39,7 @@ public class AuditMetaObjectHandler implements MetaObjectHandler {
     @Override
     public void updateFill(MetaObject metaObject) {
         this.strictUpdateFill(metaObject, "updatedAt", LocalDateTime.class, LocalDateTime.now());
-        this.strictUpdateFill(metaObject, "updatedBy", Long.class, 0L);
+        Long userId = AuthUserContext.getUserId();
+        this.strictUpdateFill(metaObject, "updatedBy", Long.class, userId != null ? userId : 0L);
     }
 }
